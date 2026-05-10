@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Моя стартовая страница</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    color: #f0f0f5;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Плавающие светящиеся пятна для атмосферы */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.35;
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::before {
+    width: 380px; height: 380px;
+    background: #764ba2;
+    top: -100px; left: -100px;
+  }
+  body::after {
+    width: 420px; height: 420px;
+    background: #667eea;
+    bottom: -120px; right: -120px;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 60px 24px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* 1. ЗАГОЛОВОК */
+  .greeting {
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 700;
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 50%, #fbc2eb 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  /* 2. СТРОКА ПОИСКА */
+  .search-box {
+    display: flex;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  .search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 12px 16px;
+    font-size: 1rem;
+    color: #f0f0f5;
+    font-family: inherit;
+  }
+  .search-box input::placeholder { color: rgba(240, 240, 245, 0.45); }
+  .search-box button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .search-box button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45);
+  }
+  .search-box button:active { transform: translateY(0); }
+
+  /* 3-5. ИНФО-КАРТОЧКА (даты + время) */
+  .info-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 32px 28px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* 3. Григорианская дата */
+  .date-greg {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    color: #d8d8e8;
+    font-weight: 400;
+  }
+
+  /* 4. Еврейская дата */
+  .date-hebrew {
+    font-size: clamp(1.15rem, 3.4vw, 1.5rem);
+    color: #fbc2eb;
+    font-weight: 500;
+    direction: rtl;
+    font-family: 'Segoe UI', 'David', 'Times New Roman', serif;
+    min-height: 1.5em;
+  }
+
+  /* 5. Время */
+  .time {
+    font-size: clamp(2.6rem, 9vw, 4rem);
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+    margin-top: 6px;
+  }
+
+  @media (max-width: 480px) {
+    .container { padding: 40px 16px 30px; gap: 24px; }
+    .search-box { flex-direction: column; padding: 10px; }
+    .search-box button { width: 100%; }
+    .info-card { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 1. Заголовок -->
+    <h1 class="greeting" id="greeting">Привет, бро</h1>
+
+    <!-- 2. Строка поиска -->
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Что ищем сегодня?" autocomplete="off">
+      <button id="searchBtn">Искать</button>
+    </div>
+
+    <!-- 3-5. Даты и время -->
+    <div class="info-card">
+      <div class="date-greg" id="dateGreg">—</div>
+      <div class="date-hebrew" id="dateHebrew">——</div>
+      <div class="time" id="time">00:00:00</div>
+    </div>
+  </div>
+
+<script>
+  // === 1. Динамическое приветствие ===
+  function setGreeting() {
+    const hour = new Date().getHours();
+    let text;
+    if (hour >= 5 && hour < 12)      text = 'Доброе утро, бро';
+    else if (hour >= 12 && hour < 18) text = 'Добрый день, бро';
+    else if (hour >= 18 && hour < 23) text = 'Добрый вечер, бро';
+    else                              text = 'Доброй ночи, бро';
+    document.getElementById('greeting').textContent = text;
+  }
+
+  // === 2. Поиск Google в новой вкладке ===
+  function doSearch() {
+    const query = document.getElementById('searchInput').value.trim();
+    if (!query) return;
+    window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank');
+  }
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+  document.getElementById('searchInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSearch();
+  });
+
+  // === 3. Григорианская дата: "Понедельник, 4 мая 2026 г." ===
+  function formatGregorianDate(date) {
+    const str = date.toLocaleDateString('ru-RU', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    // Делаем первую букву заглавной (день недели)
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  // === 5. Время ЧЧ:ММ:СС ===
+  function formatTime(date) {
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+
+  // === Обновление времени и григорианской даты ===
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('time').textContent = formatTime(now);
+    document.getElementById('dateGreg').textContent = formatGregorianDate(now);
+  }
+
+  // === 4. Еврейская дата через Hebcal API ===
+  async function fetchHebrewDate() {
+    const now = new Date();
+    const gy = now.getFullYear();
+    const gm = now.getMonth() + 1;
+    const gd = now.getDate();
+    const url = `https://www.hebcal.com/converter?cfg=json&gy=${gy}&gm=${gm}&gd=${gd}&g2h=1`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const data = await response.json();
+      document.getElementById('dateHebrew').textContent = data.hebrew || '——';
+    } catch (err) {
+      console.error('Ошибка получения еврейской даты:', err);
+      document.getElementById('dateHebrew').textContent = '——';
+    }
+  }
+
+  // === Запуск ===
+  setGreeting();
+  updateClock();
+  fetchHebrewDate();
+
+  setInterval(updateClock, 1000);              // время — каждую секунду
+  setInterval(setGreeting, 60 * 60 * 1000);    // приветствие — раз в час
+  // Раз в сутки обновляем еврейскую дату (на случай если страница висит долго)
+  setInterval(fetchHebrewDate, 24 * 60 * 60 * 1000);
+
+  // Автофокус на поле поиска
+  document.getElementById('searchInput').focus();
+</script>
+</body>
+</html>
