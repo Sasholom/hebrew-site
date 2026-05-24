@@ -1,261 +1,164 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Доброе утро, бро</title>
-<style>
-  /* Сброс базовых отступов */
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  /* Тело страницы: градиентный фон и центрирование */
-  body {
-    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-    color: #f0f0f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    overflow-x: hidden;
-  }
-
-  /* Основной контейнер — по центру, колонкой */
-  .container {
-    width: 100%;
-    max-width: 620px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 28px;
-    text-align: center;
-  }
-
-  /* Приветствие — крупный заголовок */
-  .greeting {
-    font-size: clamp(2rem, 6vw, 3.2rem);
-    font-weight: 600;
-    letter-spacing: -0.5px;
-    background: linear-gradient(90deg, #a18cd1 0%, #fbc2eb 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 4px 20px rgba(161, 140, 209, 0.2);
-  }
-
-  /* Блок поиска */
-  .search-box {
-    width: 100%;
-    display: flex;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 8px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .search-box input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    padding: 12px 16px;
-    font-size: 1rem;
-    color: #f0f0f5;
-    font-family: inherit;
-  }
-
-  .search-box input::placeholder {
-    color: rgba(240, 240, 245, 0.45);
-  }
-
-  .search-box button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 12px 22px;
-    font-size: 1rem;
-    cursor: pointer;
-    font-family: inherit;
-    font-weight: 500;
-    transition: transform 0.15s ease, box-shadow 0.2s ease;
-  }
-
-  .search-box button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-  }
-
-  .search-box button:active {
-    transform: translateY(0);
-  }
-
-  /* Карточка с датами и временем */
-  .info-card {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    padding: 28px 24px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  .date-greg {
-    font-size: clamp(1rem, 3vw, 1.2rem);
-    color: #d8d8e8;
-    font-weight: 400;
-  }
-
-  .time {
-    font-size: clamp(2.4rem, 8vw, 3.8rem);
-    font-weight: 300;
-    letter-spacing: 3px;
-    color: #fff;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .date-hebrew {
-    font-size: clamp(1.1rem, 3.2vw, 1.4rem);
-    color: #fbc2eb;
-    font-weight: 500;
-    direction: rtl;
-    font-family: 'Segoe UI', 'David', 'Times New Roman', serif;
-    min-height: 1.4em;
-  }
-
-  /* Адаптивность для мобилок */
-  @media (max-width: 480px) {
-    .search-box {
-      flex-direction: column;
-      padding: 10px;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Мой Портал 🚀</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .search-box button {
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h2 {
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      color: #ffd700;
+    }
+
+    input[type="text"], textarea {
       width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      margin-bottom: 15px;
+      outline: none;
     }
-    .info-card {
-      padding: 22px 18px;
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
     }
-  }
-</style>
+
+    button {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .answer-box {
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+      min-height: 60px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      border-left: 4px solid #ffd700;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
 
   <div class="container">
-    <!-- Динамическое приветствие -->
-    <h1 class="greeting" id="greeting">Привет, бро</h1>
+    <h1>🚀 Мой Портал</h1>
 
-    <!-- Строка поиска -->
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Что ищем сегодня?" autocomplete="off">
-      <button id="searchBtn">Искать</button>
+    <div class="card">
+      <h2>🧠 Всезнайка ИИ</h2>
+      <textarea id="ai-question" placeholder="Задай любой вопрос..."></textarea>
+      <button id="ai-ask-btn">Спросить 💬</button>
+      <div class="answer-box" id="ai-answer">Здесь появится ответ ✨</div>
     </div>
 
-    <!-- Карточка с датами и временем -->
-    <div class="info-card">
-      <div class="date-greg" id="dateGreg">—</div>
-      <div class="time" id="time">00:00:00</div>
-      <div class="date-hebrew" id="dateHebrew">——</div>
-    </div>
+    <div class="footer">Сделано с 💛 by Май Бразер</div>
   </div>
 
-<script>
-  // === Динамическое приветствие в зависимости от времени суток ===
-  function setGreeting() {
-    const hour = new Date().getHours();
-    let text = 'Привет, бро';
-    if (hour >= 5 && hour < 12) text = 'Доброе утро, бро';
-    else if (hour >= 12 && hour < 18) text = 'Добрый день, бро';
-    else if (hour >= 18 && hour < 23) text = 'Добрый вечер, бро';
-    else text = 'Доброй ночи, бро';
-    document.getElementById('greeting').textContent = text;
-  }
+  <script>
+    const askBtn = document.getElementById('ai-ask-btn');
+    const askInput = document.getElementById('ai-question');
+    const answerBox = document.getElementById('ai-answer');
 
-  // === Форматирование григорианской даты на русском ===
-  function formatGregorianDate(date) {
-    const options = {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    };
-    let str = date.toLocaleDateString('ru-RU', options);
-    // Делаем первую букву дня недели заглавной
-    str = str.charAt(0).toUpperCase() + str.slice(1);
-    return str;
-  }
-
-  // === Форматирование времени ЧЧ:ММ:СС ===
-  function formatTime(date) {
-    const pad = n => String(n).padStart(2, '0');
-    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-  }
-
-  // === Обновление времени и даты каждую секунду ===
-  function updateClock() {
-    const now = new Date();
-    document.getElementById('time').textContent = formatTime(now);
-    document.getElementById('dateGreg').textContent = formatGregorianDate(now);
-  }
-
-  // === Получение еврейской даты через API Hebcal ===
-  async function fetchHebrewDate() {
-    const now = new Date();
-    const gy = now.getFullYear();
-    const gm = now.getMonth() + 1; // месяцы в JS от 0
-    const gd = now.getDate();
-    const url = `https://www.hebcal.com/converter?cfg=json&gy=${gy}&gm=${gm}&gd=${gd}&g2h=1`;
-
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Ошибка сети: ' + response.status);
-      const data = await response.json();
-      // Поле hebrew содержит красивую строку вида "י״ז באייר תשפ״ו"
-      document.getElementById('dateHebrew').textContent = data.hebrew || '——';
-    } catch (err) {
-      console.error('Не удалось получить еврейскую дату:', err);
-      document.getElementById('dateHebrew').textContent = '——';
+    async function askAI() {
+      const question = askInput.value.trim();
+      if (!question) {
+        answerBox.textContent = '⚠️ Введи вопрос, бро!';
+        return;
+      }
+      askBtn.disabled = true;
+      answerBox.textContent = '🤔 Думаю...';
+      try {
+        const res = await fetch('/.netlify/functions/ask-deepseek', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question })
+        });
+        if (!res.ok) throw new Error('Ошибка сети');
+        const data = await res.json();
+        answerBox.textContent = data.answer || data.error || 'Пустой ответ';
+      } catch (err) {
+        answerBox.textContent = '❌ Не получилось связаться с ИИ: ' + err.message;
+      } finally {
+        askBtn.disabled = false;
+      }
     }
-  }
 
-  // === Обработка поиска ===
-  function doSearch() {
-    const query = document.getElementById('searchInput').value.trim();
-    if (!query) return;
-    const searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(query);
-    window.open(searchUrl, '_blank');
-  }
+    askBtn.addEventListener('click', askAI);
+    askInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askAI();
+      }
+    });
+  </script>
 
-  // Клик по кнопке
-  document.getElementById('searchBtn').addEventListener('click', doSearch);
-  // Нажатие Enter в поле ввода
-  document.getElementById('searchInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') doSearch();
-  });
-
-  // === Инициализация при загрузке страницы ===
-  setGreeting();
-  updateClock();
-  fetchHebrewDate();
-
-  // Обновляем часы каждую секунду
-  setInterval(updateClock, 1000);
-  // Раз в час проверяем приветствие (вдруг день сменился)
-  setInterval(setGreeting, 60 * 60 * 1000);
-
-  // Автофокус на поле поиска — удобно сразу начать печатать
-  document.getElementById('searchInput').focus();
-</script>
 </body>
 </html>
