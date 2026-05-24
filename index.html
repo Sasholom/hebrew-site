@@ -136,7 +136,7 @@
       askBtn.disabled = true;
       answerBox.textContent = '🤔 Думаю...';
       try {
-        const res = await fetch('/.netlify/functions/ask-deepseek', {
+        const res = await fetch('/api/ask-deepseek', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question })
