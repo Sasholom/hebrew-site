@@ -9,8 +9,7 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-
-// ===== ВСЕЗНАЙКА ИИ (Netlify + DeepSeek) =====
+// ===== ВСЕЗНАЙКА ИИ (Vercel Serverless + DeepSeek) =====
 const askBtn = document.getElementById('ai-ask-btn');
 const askInput = document.getElementById('ai-question');
 const answerBox = document.getElementById('ai-answer');
@@ -22,13 +21,11 @@ async function askAI() {
     answerBox.textContent = '⚠️ Введи вопрос, бро!';
     return;
   }
-
   askBtn.disabled = true;
   btnText.textContent = 'Думаю...';
   answerBox.textContent = '🤔 Думаю...';
-
   try {
-    const res = await fetch('/.netlify/functions/ask-deepseek', {
+    const res = await fetch('/api/ask-deepseek', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question })
