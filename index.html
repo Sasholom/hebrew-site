@@ -1,29 +1,61 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Мой Портал 🚀</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚀 Мой Портал — Всезнайка ИИ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<script src="script.js"></script>
 <body>
 
-  <div class="container">
-    <h1>🚀 Мой Портал</h1>
+  <!-- Декоративные размытые круги на фоне -->
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
 
-    <div class="card">
-      <h2>🧠 Всезнайка ИИ</h2>
-      <textarea id="ai-question" placeholder="Задай любой вопрос..."></textarea>
-      <button id="ai-ask-btn">Спросить 💬</button>
-      <div class="answer-box" id="ai-answer">Здесь появится ответ ✨</div>
-    </div>
+  <main class="container">
 
-    <div class="footer">Сделано с 💛 by Май Бразер</div>
-  </div>
+    <!-- HERO -->
+    <header class="hero reveal">
+      <h1 class="hero-title">
+        <span class="rocket">🚀</span>
+        Мой <span class="accent">Портал</span>
+      </h1>
+      <p class="hero-subtitle">Твой личный ИИ-ассистент. Спроси что угодно.</p>
+    </header>
 
-  <script>
-  </script>
+    <!-- КАРТОЧКА ВСЕЗНАЙКА -->
+    <section class="card reveal">
+      <div class="card-header">
+        <span class="card-dot"></span>
+        <h2 class="card-title">Всезнайка ИИ</h2>
+      </div>
 
+      <textarea
+        id="ai-question"
+        class="input"
+        placeholder="Напиши свой вопрос здесь..."></textarea>
+
+      <button id="ai-ask-btn" class="btn btn-primary">
+        <span class="btn-text">Спросить</span>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+
+      <div id="ai-answer" class="answer-box"></div>
+    </section>
+
+    <footer class="footer reveal">
+      Сделано с <span class="heart">💚</span> by <strong>Май Бразер</strong>
+    </footer>
+
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>
