@@ -47,4 +47,9 @@ export default async function handler(req, res) {
     if (data.choices && data.choices[0]) {
       return res.status(200).json({ answer: data.choices[0].message.content });
     } else {
-      return res.status
+      return res.status(500).json({ error: 'Пустой ответ от ИИ' });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: 'Ошибка: ' + err.message });
+  }
+}
