@@ -4,8 +4,9 @@ const chatHistory = document.getElementById('chat-history');
 const clearBtn = document.getElementById('clear-chat-btn');
 
 const STORAGE_KEY = 'sasholom_chat_history';
+const CONTEXT_KEY = 'sasholom_context';
 
-// ===== ЗАГРУЗКА ИСТОРИИ ПРИ ОТКРЫТИИ =====
+// ===== ЗАГРУЗКА ИСТОРИИ =====
 function loadHistory() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
@@ -28,6 +29,18 @@ function saveHistory() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
 }
 
+// ===== ПОЛУЧЕНИЕ КОНТЕКСТА ДЛЯ ИИ =====
+function getContext() {
+  const saved = localStorage.getItem(CONTEXT_KEY);
+  return saved ? JSON.parse(saved) : [];
+}
+
+// ===== СОХРАНЕНИЕ КОНТЕКСТА =====
+function saveContext(context) {
+  const trimmed = context.slice(-10);
+  localStorage.setItem(CONTEXT_KEY, JSON.stringify(trimmed));
+}
+
 // ===== ДОБАВЛЕНИЕ СООБЩЕНИЯ =====
 function addMessage(text, sender, save = true) {
   const message = document.createElement('div');
@@ -43,7 +56,7 @@ function addMessage(text, sender, save = true) {
   return message;
 }
 
-// ===== ОТПРАВКА ВОПРОСА =====
+// ===== ОТПРАВКА ВОПРОСА С ПАМЯТЬЮ =====
 async function askAI() {
   const question = askInput.value.trim();
   if (!question) return;
@@ -51,19 +64,30 @@ async function askAI() {
   addMessage(question, 'user');
   askInput.value = '';
 
-  const thinking = addMessage('Думаю', 'ai', false);
+  const thinking = addMessage('Думаю...', 'ai', false);
   thinking.classList.add('thinking');
   askBtn.disabled = true;
+
+  const context = getContext();
 
   try {
     const res = await fetch('/api/ask-deepseek', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question })
+      body: JSON.stringify({ question, history: context })
     });
+
     const data = await res.json();
     thinking.remove();
-    addMessage(data.answer || data.error || 'Пустой ответ 🤷', 'ai');
+
+    const answer = data.answer || data.error || 'Пустой ответ 🤷';
+    addMessage(answer, 'ai');
+
+    // Обновляем контекст
+    context.push({ role: 'user', content: question });
+    context.push({ role: 'assistant', content: answer });
+    saveContext(context);
+
   } catch (err) {
     thinking.remove();
     addMessage('❌ Ошибка связи: ' + err.message, 'ai');
@@ -76,6 +100,7 @@ async function askAI() {
 function clearChat() {
   if (!confirm('Точно удалить всю историю чата? 🗑️')) return;
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(CONTEXT_KEY);
   chatHistory.innerHTML = '';
   addMessage('Привет! Задай мне любой вопрос 😎', 'ai');
 }
