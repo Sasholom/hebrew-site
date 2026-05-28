@@ -1,230 +1,203 @@
-/* ===== БАЗА ===== */
-:root {
-  --green-primary: #2E8B57;
-  --green-light: #3CB371;
-  --green-mint: #E0F2E9;
-  --green-forest: #1B4D3E;
-  --bg: #F8FBF9;
-  --text: #2C3A34;
-  --text-muted: #5A6B62;
-  --white: #FFFFFF;
-  --shadow-sm: 0 2px 10px rgba(27, 77, 62, 0.06);
-  --shadow-md: 0 8px 30px rgba(27, 77, 62, 0.08);
-  --shadow-glow: 0 0 25px rgba(46, 139, 87, 0.35);
-  --radius: 20px;
-  --radius-sm: 12px;
-  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* ===== СБРОС И БАЗА ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
   min-height: 100vh;
+  color: #fff;
+  padding: 20px;
   overflow-x: hidden;
-  position: relative;
+  background: linear-gradient(-45deg, #1e3c72, #2a5298, #6e3b8e, #2a5298);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
 }
 
-/* ===== ДЕКОРАТИВНЫЕ БЛОБЫ ===== */
-.bg-blob {
+/* ===== АНИМАЦИЯ ФОНА ===== */
+@keyframes gradientBG {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== ЗВЁЗДЫ НА ФОНЕ ===== */
+body::before {
+  content: '';
   position: fixed;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.4;
-  z-index: -1;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, white, transparent),
+    radial-gradient(1px 1px at 60% 70%, white, transparent),
+    radial-gradient(2px 2px at 80% 20%, white, transparent),
+    radial-gradient(1px 1px at 40% 90%, white, transparent),
+    radial-gradient(2px 2px at 90% 50%, white, transparent);
+  background-size: 200% 200%;
+  opacity: 0.3;
+  animation: twinkle 8s ease infinite;
   pointer-events: none;
-}
-.blob-1 {
-  width: 400px; height: 400px;
-  background: var(--green-light);
-  top: -150px; right: -100px;
-}
-.blob-2 {
-  width: 350px; height: 350px;
-  background: var(--green-mint);
-  bottom: -100px; left: -100px;
+  z-index: 0;
 }
 
-/* ===== КОНТЕЙНЕР ===== */
-.container {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 80px 24px 60px;
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 0.7; }
 }
 
-/* ===== HERO ===== */
-.hero {
+/* ===== ЗАГОЛОВОК ===== */
+h1 {
   text-align: center;
-  margin-bottom: 60px;
-}
-.hero-title {
-  font-size: clamp(2.2rem, 5vw, 3.5rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--green-forest);
-  margin-bottom: 12px;
-}
-.hero-title .accent {
-  background: linear-gradient(135deg, var(--green-light), var(--green-primary));
+  font-size: 2.8em;
+  margin: 30px 0;
+  background: linear-gradient(90deg, #fff, #a8d0ff, #fff);
   -webkit-background-clip: text;
-  background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-.rocket {
-  display: inline-block;
-  animation: float 3s ease-in-out infinite;
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-.hero-subtitle {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  font-weight: 400;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(168, 208, 255, 0.5);
+  position: relative;
+  z-index: 1;
 }
 
-/* ===== КАРТОЧКА (glassmorphism) ===== */
+/* ===== СТЕКЛЯННАЯ КАРТОЧКА ===== */
 .card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(46, 139, 87, 0.12);
-  border-radius: var(--radius);
-  padding: 36px;
-  box-shadow: var(--shadow-md);
-  transition: var(--transition);
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 35px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.8s ease;
 }
-.card:hover {
-  box-shadow: var(--shadow-md), 0 0 0 1px rgba(46, 139, 87, 0.15);
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.card-header {
+
+.card h2 {
+  font-size: 1.6em;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.card-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--green-light), var(--green-primary));
-  box-shadow: 0 0 12px rgba(46, 139, 87, 0.5);
-}
-.card-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--green-forest);
+  gap: 10px;
 }
 
-/* ===== ИНПУТ ===== */
-.input {
+/* ===== ПОЛЕ ВВОДА ===== */
+#ai-question {
   width: 100%;
-  min-height: 110px;
-  padding: 16px 18px;
+  min-height: 90px;
+  padding: 15px;
+  font-size: 1em;
   font-family: inherit;
-  font-size: 1rem;
-  color: var(--text);
-  background: var(--white);
-  border: 1.5px solid rgba(46, 139, 87, 0.15);
-  border-radius: var(--radius-sm);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
   resize: vertical;
-  transition: var(--transition);
-  outline: none;
-  margin-bottom: 18px;
-}
-.input::placeholder { color: #9aaca3; }
-.input:focus {
-  border-color: var(--green-primary);
-  box-shadow: 0 0 0 4px rgba(46, 139, 87, 0.12);
+  transition: all 0.3s ease;
 }
 
-/* ===== КНОПКА ===== */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 13px 26px;
-  font-family: inherit;
-  font-size: 1rem;
+#ai-question::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+#ai-question:focus {
+  outline: none;
+  border-color: #a8d0ff;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(168, 208, 255, 0.3);
+}
+
+/* ===== КНОПКА СПРОСИТЬ ===== */
+#ai-ask-btn {
+  margin-top: 15px;
+  padding: 14px 35px;
+  font-size: 1.1em;
   font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6b9d, #c06ee5);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   cursor: pointer;
-  transition: var(--transition);
+  box-shadow: 0 4px 20px rgba(192, 110, 229, 0.4);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
-.btn-primary {
-  background: linear-gradient(135deg, var(--green-light), var(--green-primary));
-  color: var(--white);
-  box-shadow: 0 4px 14px rgba(46, 139, 87, 0.3);
-}
-.btn-primary:hover {
+
+#ai-ask-btn:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 6px 30px rgba(192, 110, 229, 0.6);
 }
-.btn-primary:active { transform: translateY(0); }
-.btn-primary:disabled {
+
+#ai-ask-btn:active {
+  transform: translateY(0);
+}
+
+#ai-ask-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-/* ===== ОТВЕТ ===== */
-.answer-box {
-  margin-top: 24px;
-  padding: 20px 22px;
-  background: var(--green-mint);
-  border-left: 3px solid var(--green-primary);
-  border-radius: var(--radius-sm);
-  color: var(--green-forest);
-  font-size: 1rem;
-  line-height: 1.65;
+/* ===== БЛОК ОТВЕТА ===== */
+#ai-answer {
+  margin-top: 25px;
+  padding: 20px;
+  min-height: 60px;
+  background: rgba(255, 255, 255, 0.08);
+  border-left: 4px solid #ffd700;
+  border-radius: 10px;
+  font-size: 1.05em;
+  line-height: 1.6;
   white-space: pre-wrap;
-  word-wrap: break-word;
-  animation: slideUp 0.4s ease-out;
-}
-.answer-box:empty { display: none; }
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  animation: fadeIn 0.5s ease;
 }
 
-/* ===== FOOTER ===== */
-.footer {
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ===== АНИМАЦИЯ ЗАГРУЗКИ (точки) ===== */
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+  100% { content: ''; }
+}
+
+/* ===== ФУТЕР ===== */
+footer {
   text-align: center;
-  margin-top: 60px;
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
-.heart {
-  display: inline-block;
-  animation: beat 1.4s ease-in-out infinite;
-}
-@keyframes beat {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+  margin-top: 40px;
+  opacity: 0.7;
+  font-size: 0.9em;
+  position: relative;
+  z-index: 1;
 }
 
-/* ===== АНИМАЦИЯ ПОЯВЛЕНИЯ ПРИ СКРОЛЛЕ ===== */
-.reveal {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
-}
-.reveal.visible {
-  opacity: 1;
-  transform: translateY(0);
+footer span {
+  color: #ff6b9d;
 }
 
-/* ===== АДАПТИВ ===== */
+/* ===== АДАПТИВ ПОД ТЕЛЕФОН ===== */
 @media (max-width: 600px) {
-  .container { padding: 50px 16px 40px; }
-  .card { padding: 24px 20px; }
-  .hero { margin-bottom: 40px; }
-  .btn { width: 100%; justify-content: center; }
+  h1 { font-size: 2em; }
+  .card { padding: 25px 20px; margin: 20px auto; }
+  #ai-ask-btn { width: 100%; }
 }

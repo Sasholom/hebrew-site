@@ -1,19 +1,7 @@
-// ===== АНИМАЦИЯ ПОЯВЛЕНИЯ ПРИ СКРОЛЛЕ =====
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-// ===== ВСЕЗНАЙКА ИИ (Vercel Serverless + DeepSeek) =====
-const askBtn = document.getElementById('ai-ask-btn');
+const askBtn   = document.getElementById('ai-ask-btn');
 const askInput = document.getElementById('ai-question');
 const answerBox = document.getElementById('ai-answer');
-const btnText = askBtn.querySelector('.btn-text');
+const btnText  = askBtn.querySelector('.btn-text');
 
 async function askAI() {
   const question = askInput.value.trim();
@@ -21,20 +9,22 @@ async function askAI() {
     answerBox.textContent = '⚠️ Введи вопрос, бро!';
     return;
   }
+
   askBtn.disabled = true;
-  btnText.textContent = 'Думаю...';
-  answerBox.textContent = '🤔 Думаю...';
+  btnText.textContent = 'Думаю';
+  answerBox.innerHTML = '🤔 <span class="loading-dots">Думаю</span>';
+
   try {
     const res = await fetch('/api/ask-deepseek', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question })
     });
-    if (!res.ok) throw new Error('Ошибка сети');
+
     const data = await res.json();
-    answerBox.textContent = data.answer || data.error || 'Пустой ответ';
+    answerBox.textContent = data.answer || data.error || 'Пустой ответ 🤷';
   } catch (err) {
-    answerBox.textContent = '❌ Не получилось связаться с ИИ: ' + err.message;
+    answerBox.textContent = '❌ Ошибка связи: ' + err.message;
   } finally {
     askBtn.disabled = false;
     btnText.textContent = 'Спросить';
