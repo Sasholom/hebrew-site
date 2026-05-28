@@ -1,18 +1,38 @@
-const askBtn   = document.getElementById('ai-ask-btn');
+const askBtn = document.getElementById('ai-ask-btn');
 const askInput = document.getElementById('ai-question');
-const answerBox = document.getElementById('ai-answer');
-const btnText  = askBtn.querySelector('.btn-text');
+const chatHistory = document.getElementById('chat-history');
 
+// Функция добавления сообщения
+function addMessage(text, sender) {
+  const message = document.createElement('div');
+  message.className = `message ${sender}-message`;
+  
+  const avatar = sender === 'user' ? '👤' : '🧠';
+  
+  message.innerHTML = `
+    <span class="avatar">${avatar}</span>
+    <div class="bubble">${text}</div>
+  `;
+  
+  chatHistory.appendChild(message);
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+  return message;
+}
+
+// Главная функция
 async function askAI() {
   const question = askInput.value.trim();
-  if (!question) {
-    answerBox.textContent = '⚠️ Введи вопрос, бро!';
-    return;
-  }
+  if (!question) return;
 
+  // Показываем вопрос
+  addMessage(question, 'user');
+  askInput.value = '';
+  
+  // Показываем "Думаю..."
+  const thinking = addMessage('Думаю', 'ai');
+  thinking.classList.add('thinking');
+  
   askBtn.disabled = true;
-  btnText.textContent = 'Думаю';
-  answerBox.innerHTML = '🤔 <span class="loading-dots">Думаю</span>';
 
   try {
     const res = await fetch('/api/ask-deepseek', {
@@ -22,12 +42,17 @@ async function askAI() {
     });
 
     const data = await res.json();
-    answerBox.textContent = data.answer || data.error || 'Пустой ответ 🤷';
+    
+    // Удаляем "Думаю..."
+    thinking.remove();
+    
+    // Показываем ответ
+    addMessage(data.answer || data.error || 'Пустой ответ 🤷', 'ai');
   } catch (err) {
-    answerBox.textContent = '❌ Ошибка связи: ' + err.message;
+    thinking.remove();
+    addMessage('❌ Ошибка связи: ' + err.message, 'ai');
   } finally {
     askBtn.disabled = false;
-    btnText.textContent = 'Спросить';
   }
 }
 
