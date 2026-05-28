@@ -201,3 +201,81 @@ footer span {
   .card { padding: 25px 20px; margin: 20px auto; }
   #ai-ask-btn { width: 100%; }
 }
+/* ===== АДАПТИВ ПОД ПЛАНШЕТЫ ===== */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.2em;
+    margin: 20px 0;
+  }
+
+  .card {
+    max-width: 90%;
+    margin: 20px auto;
+    padding: 25px 20px;
+  }
+
+  .card h2 {
+    font-size: 1.4em;
+  }
+
+  #ai-question {
+    min-height: 80px;
+    font-size: 0.95em;
+  }
+
+  #ai-ask-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 1em;
+  }
+}
+
+/* ===== АДАПТИВ ПОД ТЕЛЕФОНЫ ===== */
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.8em;
+    margin: 15px 0;
+  }
+
+  .card {
+    max-width: 95%;
+    padding: 20px 15px;
+    border-radius: 15px;
+  }
+
+  .card h2 {
+    font-size: 1.2em;
+    flex-wrap: wrap;
+  }
+
+  #ai-question {
+    min-height: 70px;
+    font-size: 0.9em;
+    padding: 12px;
+  }
+
+  #ai-ask-btn {
+    padding: 12px;
+    font-size: 0.95em;
+  }
+
+  #ai-answer {
+    padding: 15px;
+    font-size: 0.95em;
+  }
+
+  footer {
+    font-size: 0.85em;
+    padding: 15px 10px;
+  }
+}
+
+/* ===== УБИРАЕМ ГОРИЗОНТАЛЬНУЮ ПРОКРУТКУ ===== */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
