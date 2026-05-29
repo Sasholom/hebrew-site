@@ -1,58 +1,164 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SaSholom 🚀</title>
-  <!-- ===== SEO МЕТА-ТЕГИ ===== -->
-  <meta name="description" content="SaSholom AI — умный помощник на базе искусственного интеллекта. Задавай вопросы, получай ответы, веди диалог с ИИ! 🚀">
-  <meta name="keywords" content="ИИ, AI, помощник, чат-бот, искусственный интеллект, SaSholom, нейросеть">
-  <meta name="author" content="Май Бразер">
-  <meta name="robots" content="index, follow">
-  <meta name="language" content="Russian">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Мой Портал 🚀</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  <!-- ===== OPEN GRAPH (для Telegram, WhatsApp, VK, Facebook) ===== -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://sasholomsite.vercel.app/">
-  <meta property="og:title" content="SaSholom AI — твой умный помощник 🤖">
-  <meta property="og:description" content="Задавай вопросы ИИ, веди диалог, получай умные ответы! Память, история, всё что нужно 🚀">
-  <meta property="og:image" content="https://sasholomsite.vercel.app/preview.png">
-  <meta property="og:locale" content="ru_RU">
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
 
-  <!-- ===== TWITTER CARD ===== -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SaSholom AI — твой умный помощник 🤖">
-  <meta name="twitter:description" content="Задавай вопросы ИИ, веди диалог, получай умные ответы! 🚀">
-  <meta name="twitter:image" content="https://sasholomsite.vercel.app/preview.png">
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
 
-<!-- ===== ТЕМА БРАУЗЕРА (мобилки) ===== -->
-  <meta name="theme-color" content="#2a5298">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="style.css">
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h2 {
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      color: #ffd700;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      margin-bottom: 15px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    button {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .answer-box {
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+      min-height: 60px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      border-left: 4px solid #ffd700;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
 
-  <h1>🚀 SaSholom</h1>
+  <div class="container">
+    <h1>🚀 Мой Портал</h1>
 
-  <div class="card">
-    <h2>🧠 Hebrew AI</h2>
-    <textarea id="ai-question" placeholder="Задай любой вопрос..."></textarea>
+    <div class="card">
+      <h2>🧠 Всезнайка ИИ</h2>
+      <textarea id="ai-question" placeholder="Задай любой вопрос..."></textarea>
       <button id="ai-ask-btn">Спросить 💬</button>
-      <button id="clear-chat-btn">🗑️ Очистить чат</button>
-    </button>
-    <div id="chat-history">
-  <div class="message ai-message">
-    <span class="avatar">🧠</span>
-    <div class="bubble">Привет! Задай мне любой вопрос 😎</div>
-  </div>
-</div>
+      <div class="answer-box" id="ai-answer">Здесь появится ответ ✨</div>
+    </div>
+
+    <div class="footer">Сделано с 💛 by Май Бразер</div>
   </div>
 
-  <footer>
-    Made with <span>💚</span> by S.K.
-  </footer>
+  <script>
+    const askBtn = document.getElementById('ai-ask-btn');
+    const askInput = document.getElementById('ai-question');
+    const answerBox = document.getElementById('ai-answer');
 
-  <script src="script.js"></script>
+    async function askAI() {
+      const question = askInput.value.trim();
+      if (!question) {
+        answerBox.textContent = '⚠️ Введи вопрос, бро!';
+        return;
+      }
+      askBtn.disabled = true;
+      answerBox.textContent = '🤔 Думаю...';
+      try {
+        const res = await fetch('/.netlify/functions/ask-deepseek', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question })
+        });
+        if (!res.ok) throw new Error('Ошибка сети');
+        const data = await res.json();
+        answerBox.textContent = data.answer || data.error || 'Пустой ответ';
+      } catch (err) {
+        answerBox.textContent = '❌ Не получилось связаться с ИИ: ' + err.message;
+      } finally {
+        askBtn.disabled = false;
+      }
+    }
+
+    askBtn.addEventListener('click', askAI);
+    askInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askAI();
+      }
+    });
+  </script>
+
 </body>
 </html>
