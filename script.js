@@ -87,18 +87,18 @@ function addMessage(text, sender, save = true) {
   if (sender === 'ai') {
     const copyBtn = document.createElement('button');
     copyBtn.className = 'copy-btn';
-    copyBtn.innerHTML = '📋';
+    copyBtn.textContent = 'Копировать';
     copyBtn.title = 'Скопировать ответ';
     copyBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const rawText = bubble.getAttribute('data-raw') || '';
       try {
         await navigator.clipboard.writeText(rawText);
-        copyBtn.innerHTML = '✓';
-        setTimeout(() => { copyBtn.innerHTML = '📋'; }, 2000);
+        copyBtn.textContent = 'Скопировано ✓';
+        setTimeout(() => { copyBtn.textContent = 'Копировать'; }, 2000);
       } catch (err) {
-        copyBtn.innerHTML = '❌';
-        setTimeout(() => { copyBtn.innerHTML = '📋'; }, 2000);
+        copyBtn.textContent = 'Ошибка';
+        setTimeout(() => { copyBtn.textContent = 'Копировать'; }, 2000);
       }
     });
     message.appendChild(copyBtn);

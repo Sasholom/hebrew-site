@@ -377,20 +377,21 @@ html, body {
 }
 /* ===== КНОПКА КОПИРОВАНИЯ ===== */
 .copy-btn {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1em;
-  padding: 4px 6px;
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8em;
+  padding: 4px 10px;
+  border-radius: 12px;
   cursor: pointer;
-  margin-left: 6px;
+  margin-left: 8px;
   align-self: flex-start;
   transition: all 0.2s;
-  line-height: 1;
+  backdrop-filter: blur(5px);
+  white-space: nowrap;
 }
 .copy-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
   color: #fff;
-  background: rgba(255, 255, 255, 0.15);
-  transform: scale(1.1);
 }
