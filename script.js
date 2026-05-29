@@ -173,6 +173,29 @@ if (askInput) {
     }
   });
 }
+// ===== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ =====
+const themeToggle = document.getElementById('theme-toggle');
 
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('sasholom_theme', theme);
+  if (themeToggle) {
+    themeToggle.textContent = theme === 'light' ? '☀️' : '🌓';
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  setTheme(next);
+}
+
+// Загружаем сохранённую тему
+const savedTheme = localStorage.getItem('sasholom_theme') || 'dark';
+setTheme(savedTheme);
+
+if (themeToggle) {
+  themeToggle.addEventListener('click', toggleTheme);
+}
 // ===== ЗАПУСК =====
 loadHistory();  

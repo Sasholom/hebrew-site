@@ -5,15 +5,87 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Тёмная тема (по умолчанию) */
+  --bg-gradient-start: #1e3c72;
+  --bg-gradient-mid: #2a5298;
+  --bg-gradient-accent: #6e3b8e;
+  --text-color: #fff;
+  --card-bg: rgba(255, 255, 255, 0.08);
+  --card-border: rgba(255, 255, 255, 0.18);
+  --input-bg: rgba(255, 255, 255, 0.1);
+  --input-border: rgba(255, 255, 255, 0.2);
+  --input-focus-border: #a8d0ff;
+  --input-focus-shadow: rgba(168, 208, 255, 0.3);
+  --btn-gradient: linear-gradient(135deg, #ff6b9d, #c06ee5);
+  --btn-shadow: rgba(192, 110, 229, 0.4);
+  --btn-hover-shadow: rgba(192, 110, 229, 0.6);
+  --answer-bg: rgba(255, 255, 255, 0.08);
+  --answer-border: #ffd700;
+  --chat-bg: rgba(255, 255, 255, 0.05);
+  --chat-border: #ffd700;
+  --user-bubble-bg: linear-gradient(135deg, #ff6b9d, #ee5a6f);
+  --ai-bubble-bg: rgba(255, 255, 255, 0.15);
+  --clear-btn-bg: rgba(255, 255, 255, 0.1);
+  --clear-btn-border: rgba(255, 255, 255, 0.3);
+  --clear-btn-hover-bg: rgba(255, 100, 100, 0.3);
+  --clear-btn-hover-border: #ff6b6b;
+  --footer-opacity: 0.7;
+  --copy-btn-bg: rgba(255, 255, 255, 0.1);
+  --copy-btn-border: rgba(255, 255, 255, 0.2);
+  --copy-btn-color: rgba(255, 255, 255, 0.8);
+  --copy-btn-hover-bg: rgba(255, 255, 255, 0.25);
+  --copy-btn-hover-border: rgba(255, 255, 255, 0.5);
+  --theme-toggle-bg: rgba(255, 255, 255, 0.1);
+  --theme-toggle-border: rgba(255, 255, 255, 0.2);
+  --star-opacity: 0.3;
+}
+
+[data-theme="light"] {
+  --bg-gradient-start: #e0eafc;
+  --bg-gradient-mid: #cfdef3;
+  --bg-gradient-accent: #f5e0f0;
+  --text-color: #1a1a2e;
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(0, 0, 0, 0.1);
+  --input-bg: rgba(0, 0, 0, 0.03);
+  --input-border: rgba(0, 0, 0, 0.15);
+  --input-focus-border: #2a5298;
+  --input-focus-shadow: rgba(42, 82, 152, 0.2);
+  --btn-gradient: linear-gradient(135deg, #ff6b9d, #c06ee5);
+  --btn-shadow: rgba(192, 110, 229, 0.3);
+  --btn-hover-shadow: rgba(192, 110, 229, 0.5);
+  --answer-bg: rgba(0, 0, 0, 0.03);
+  --answer-border: #2a5298;
+  --chat-bg: rgba(0, 0, 0, 0.02);
+  --chat-border: #2a5298;
+  --user-bubble-bg: linear-gradient(135deg, #ff6b9d, #ee5a6f);
+  --ai-bubble-bg: rgba(0, 0, 0, 0.08);
+  --clear-btn-bg: rgba(0, 0, 0, 0.05);
+  --clear-btn-border: rgba(0, 0, 0, 0.15);
+  --clear-btn-hover-bg: rgba(255, 100, 100, 0.2);
+  --clear-btn-hover-border: #ff6b6b;
+  --footer-opacity: 0.8;
+  --copy-btn-bg: rgba(0, 0, 0, 0.05);
+  --copy-btn-border: rgba(0, 0, 0, 0.15);
+  --copy-btn-color: rgba(0, 0, 0, 0.7);
+  --copy-btn-hover-bg: rgba(0, 0, 0, 0.1);
+  --copy-btn-hover-border: rgba(0, 0, 0, 0.3);
+  --theme-toggle-bg: rgba(0, 0, 0, 0.05);
+  --theme-toggle-border: rgba(0, 0, 0, 0.15);
+  --star-opacity: 0;
+}
+
 body {
   font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
   min-height: 100vh;
-  color: #fff;
+  color: var(--text-color);
   padding: 20px;
   overflow-x: hidden;
-  background: linear-gradient(-45deg, #1e3c72, #2a5298, #6e3b8e, #2a5298);
+  background: linear-gradient(-45deg, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-accent), var(--bg-gradient-mid));
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
+  transition: background 0.5s ease, color 0.3s ease;
 }
 
 /* ===== АНИМАЦИЯ ФОНА ===== */
@@ -23,7 +95,7 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-/* ===== ЗВЁЗДЫ НА ФОНЕ ===== */
+/* ===== ЗВЁЗДЫ НА ФОНЕ (только тёмная тема) ===== */
 body::before {
   content: '';
   position: fixed;
@@ -36,10 +108,11 @@ body::before {
     radial-gradient(1px 1px at 40% 90%, white, transparent),
     radial-gradient(2px 2px at 90% 50%, white, transparent);
   background-size: 200% 200%;
-  opacity: 0.3;
+  opacity: var(--star-opacity);
   animation: twinkle 8s ease infinite;
   pointer-events: none;
   z-index: 0;
+  transition: opacity 0.3s;
 }
 
 @keyframes twinkle {
@@ -47,16 +120,36 @@ body::before {
   50%      { opacity: 0.7; }
 }
 
+/* ===== КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ ===== */
+.theme-toggle {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: var(--theme-toggle-bg);
+  border: 1px solid var(--theme-toggle-border);
+  color: var(--text-color);
+  font-size: 1.2em;
+  padding: 6px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  z-index: 10;
+}
+.theme-toggle:hover {
+  transform: scale(1.05);
+  background: var(--copy-btn-hover-bg);
+}
+
 /* ===== ЗАГОЛОВОК ===== */
 h1 {
   text-align: center;
   font-size: 2.8em;
   margin: 30px 0;
-  background: linear-gradient(90deg, #fff, #a8d0ff, #fff);
+  background: linear-gradient(90deg, var(--text-color), #a8d0ff, var(--text-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 0 30px rgba(168, 208, 255, 0.5);
   position: relative;
   z-index: 1;
 }
@@ -66,12 +159,12 @@ h1 {
   max-width: 700px;
   margin: 40px auto;
   padding: 35px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--card-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--card-border);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1;
   animation: fadeInUp 0.8s ease;
@@ -97,23 +190,24 @@ h1 {
   padding: 15px;
   font-size: 1em;
   font-family: inherit;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-color);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 12px;
   resize: vertical;
   transition: all 0.3s ease;
 }
 
 #ai-question::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-color);
+  opacity: 0.5;
 }
 
 #ai-question:focus {
   outline: none;
-  border-color: #a8d0ff;
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 20px rgba(168, 208, 255, 0.3);
+  border-color: var(--input-focus-border);
+  background: var(--input-bg);
+  box-shadow: 0 0 20px var(--input-focus-shadow);
 }
 
 /* ===== КНОПКА СПРОСИТЬ ===== */
@@ -123,19 +217,17 @@ h1 {
   font-size: 1.1em;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(135deg, #ff6b9d, #c06ee5);
+  background: var(--btn-gradient);
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(192, 110, 229, 0.4);
+  box-shadow: 0 4px 20px var(--btn-shadow);
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
 }
 
 #ai-ask-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 30px rgba(192, 110, 229, 0.6);
+  box-shadow: 0 6px 30px var(--btn-hover-shadow);
 }
 
 #ai-ask-btn:active {
@@ -148,74 +240,26 @@ h1 {
   transform: none;
 }
 
-/* ===== БЛОК ОТВЕТА ===== */
-#ai-answer {
-  margin-top: 25px;
-  padding: 20px;
-  min-height: 60px;
-  background: rgba(255, 255, 255, 0.08);
-  border-left: 4px solid #ffd700;
-  border-radius: 10px;
-  font-size: 1.05em;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* ===== АНИМАЦИЯ ЗАГРУЗКИ (точки) ===== */
-.loading-dots::after {
-  content: '';
-  animation: dots 1.5s steps(4, end) infinite;
-}
-
-@keyframes dots {
-  0%   { content: ''; }
-  25%  { content: '.'; }
-  50%  { content: '..'; }
-  75%  { content: '...'; }
-  100% { content: ''; }
-}
-
-/* ===== ФУТЕР ===== */
-footer {
-  text-align: center;
-  margin-top: 40px;
-  opacity: 0.7;
-  font-size: 0.9em;
-  position: relative;
-  z-index: 1;
-}
-
-footer span {
-  color: #ff6b9d;
-}
-
 /* ===== ИСТОРИЯ ЧАТА ===== */
 #chat-history {
   max-height: 400px;
   overflow-y: auto;
   padding: 15px;
   margin-top: 20px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--chat-bg);
   border-radius: 15px;
-  border-left: 4px solid #ffd700;
+  border-left: 4px solid var(--chat-border);
   display: flex;
   flex-direction: column;
   gap: 12px;
   scroll-behavior: smooth;
 }
 
-/* Красивый скроллбар */
 #chat-history::-webkit-scrollbar {
   width: 6px;
 }
 #chat-history::-webkit-scrollbar-thumb {
-  background: rgba(255, 215, 0, 0.5);
+  background: var(--chat-border);
   border-radius: 10px;
 }
 
@@ -225,6 +269,11 @@ footer span {
   gap: 10px;
   align-items: flex-start;
   animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .avatar {
@@ -240,20 +289,18 @@ footer span {
   line-height: 1.5;
 }
 
-/* Сообщения пользователя (справа) */
 .user-message {
   flex-direction: row-reverse;
 }
 .user-message .bubble {
-  background: linear-gradient(135deg, #ff6b9d, #ee5a6f);
+  background: var(--user-bubble-bg);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 
-/* Сообщения ИИ (слева) */
 .ai-message .bubble {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: var(--ai-bubble-bg);
+  color: var(--text-color);
   border-bottom-left-radius: 4px;
   backdrop-filter: blur(10px);
 }
@@ -263,12 +310,17 @@ footer span {
   content: '...';
   animation: dots 1.5s infinite;
 }
+@keyframes dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}
 
 /* ===== КНОПКА ОЧИСТКИ ===== */
 #clear-chat-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--clear-btn-bg);
+  color: var(--text-color);
+  border: 1px solid var(--clear-btn-border);
   padding: 10px 18px;
   border-radius: 25px;
   cursor: pointer;
@@ -279,8 +331,8 @@ footer span {
 }
 
 #clear-chat-btn:hover {
-  background: rgba(255, 100, 100, 0.3);
-  border-color: #ff6b6b;
+  background: var(--clear-btn-hover-bg);
+  border-color: var(--clear-btn-hover-border);
   transform: translateY(-2px);
 }
 
@@ -288,98 +340,11 @@ footer span {
   transform: translateY(0);
 }
 
-/* ===== АДАПТИВ ПОД ПЛАНШЕТЫ ===== */
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2.2em;
-    margin: 20px 0;
-  }
-
-  .card {
-    max-width: 90%;
-    margin: 20px auto;
-    padding: 25px 20px;
-  }
-
-  .card h2 {
-    font-size: 1.4em;
-  }
-
-  #ai-question {
-    min-height: 80px;
-    font-size: 0.95em;
-  }
-
-  #ai-ask-btn {
-    width: 100%;
-    padding: 14px;
-    font-size: 1em;
-  }
-}
-
-/* ===== АДАПТИВ ПОД ТЕЛЕФОНЫ ===== */
-@media (max-width: 480px) {
-  body {
-    padding: 10px;
-  }
-
-  h1 {
-    font-size: 1.8em;
-    margin: 15px 0;
-  }
-
-  .card {
-    max-width: 95%;
-    padding: 20px 15px;
-    border-radius: 15px;
-  }
-
-  .card h2 {
-    font-size: 1.2em;
-    flex-wrap: wrap;
-  }
-
-  #ai-question {
-    min-height: 70px;
-    font-size: 0.9em;
-    padding: 12px;
-  }
-
-  #ai-ask-btn {
-    padding: 12px;
-    font-size: 0.95em;
-  }
-
-  #ai-answer {
-    padding: 15px;
-    font-size: 0.95em;
-  }
-
-  footer {
-    font-size: 0.85em;
-    padding: 15px 10px;
-  }
-}
-
-/* ===== УБИРАЕМ ГОРИЗОНТАЛЬНУЮ ПРОКРУТКУ ===== */
-html, body {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
-
-/* Адаптив для кнопки очистки */
-@media (max-width: 480px) {
-  #clear-chat-btn {
-    width: 100%;
-    margin-left: 0;
-    margin-top: 10px;
-  }
-}
 /* ===== КНОПКА КОПИРОВАНИЯ ===== */
 .copy-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
+  background: var(--copy-btn-bg);
+  border: 1px solid var(--copy-btn-border);
+  color: var(--copy-btn-color);
   font-size: 0.8em;
   padding: 4px 10px;
   border-radius: 12px;
@@ -391,7 +356,47 @@ html, body {
   white-space: nowrap;
 }
 .copy-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.5);
-  color: #fff;
+  background: var(--copy-btn-hover-bg);
+  border-color: var(--copy-btn-hover-border);
+  color: var(--text-color);
+}
+
+/* ===== ФУТЕР ===== */
+footer {
+  text-align: center;
+  margin-top: 40px;
+  opacity: var(--footer-opacity);
+  font-size: 0.9em;
+  position: relative;
+  z-index: 1;
+}
+
+footer span {
+  color: #ff6b9d;
+}
+
+/* ===== АДАПТИВ ===== */
+@media (max-width: 768px) {
+  h1 { font-size: 2.2em; margin: 20px 0; }
+  .card { max-width: 90%; margin: 20px auto; padding: 25px 20px; }
+  .card h2 { font-size: 1.4em; }
+  #ai-question { min-height: 80px; font-size: 0.95em; }
+  #ai-ask-btn { width: 100%; padding: 14px; font-size: 1em; }
+}
+
+@media (max-width: 480px) {
+  body { padding: 10px; }
+  h1 { font-size: 1.8em; margin: 15px 0; }
+  .card { max-width: 95%; padding: 20px 15px; border-radius: 15px; }
+  .card h2 { font-size: 1.2em; flex-wrap: wrap; }
+  #ai-question { min-height: 70px; font-size: 0.9em; padding: 12px; }
+  #ai-ask-btn { padding: 12px; font-size: 0.95em; }
+  footer { font-size: 0.85em; padding: 15px 10px; }
+  #clear-chat-btn { width: 100%; margin-left: 0; margin-top: 10px; }
+}
+
+/* Убираем горизонтальную прокрутку */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
 }
