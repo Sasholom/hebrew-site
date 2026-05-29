@@ -1,12 +1,40 @@
+// api/ask-deepseek.js
+
+// Простейший in-memory rate limiter (действует, пока функция "тёплая")
+const rateLimit = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 минута
+const MAX_REQUESTS = 20;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Метод не поддерживается' });
   }
+
+  // --- Rate Limiting ---
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW;
+
+  if (!rateLimit.has(ip)) {
+    rateLimit.set(ip, []);
+  }
+  const timestamps = rateLimit.get(ip).filter(t => t > windowStart);
+  timestamps.push(now);
+  rateLimit.set(ip, timestamps);
+
+  if (timestamps.length > MAX_REQUESTS) {
+    return res.status(429).json({ error: 'Слишком много запросов. Подожди минуту и попробуй снова 😊' });
+  }
+  // --- Конец Rate Limiting ---
 
   const { question, history } = req.body;
 
-  if (!question) {
-    return res.status(400).json({ error: 'Нет вопроса' });
+  // Валидация вопроса
+  if (!question || typeof question !== 'string' || question.trim().length === 0) {
+    return res.status(400).json({ error: 'Пустой вопрос' });
+  }
+  if (question.length > 2000) {
+    return res.status(400).json({ error: 'Вопрос слишком длинный (макс. 2000 символов)' });
   }
 
   // Формируем историю для ChadGPT
@@ -18,7 +46,7 @@ export default async function handler(req, res) {
     content: 'Ты — дружелюбный и умный помощник по имени SaSholom AI. Отвечай кратко, по делу, с лёгким юмором. Используй эмодзи там, где уместно. 😊'
   });
 
-  // Добавляем последние 10 сообщений истории
+  // Добавляем последние 10 сообщений истории (если есть)
   if (Array.isArray(history)) {
     history.slice(-10).forEach(msg => {
       chatHistory.push({ role: msg.role, content: msg.content });
@@ -48,6 +76,6 @@ export default async function handler(req, res) {
       });
     }
   } catch (err) {
-    return res.status(500).json({ error: 'Ошибка: ' + err.message });
+    return res.status(500).json({ error: 'Ошибка соединения с ИИ. Попробуй позже.' });
   }
 }
