@@ -29,7 +29,13 @@ function setRole(role) {
   });
   localStorage.setItem('sasholom_role', role);
 }
-
+// ===== ПОДСВЕТКА КОДА =====
+function highlightCode(element) {
+  if (typeof hljs === 'undefined') return;
+  element.querySelectorAll('pre code').forEach(block => {
+    hljs.highlightElement(block);
+  });
+}
 // ===== БЕЗОПАСНЫЙ РЕНДЕРИНГ MARKDOWN =====
 function renderMarkdown(text) {
   if (typeof marked === 'undefined') {
@@ -118,6 +124,9 @@ function addMessage(text, sender, save = true) {
   }
 
   chatHistory.appendChild(message);
+  if (sender === 'ai') {
+    highlightCode(message);
+  }
   chatHistory.scrollTop = chatHistory.scrollHeight;
   if (save) saveHistory();
   return message;
