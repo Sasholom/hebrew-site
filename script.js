@@ -2,6 +2,7 @@ const askBtn = document.getElementById('ai-ask-btn');
 const askInput = document.getElementById('ai-question');
 const chatHistory = document.getElementById('chat-history');
 const clearBtn = document.getElementById('clear-chat-btn');
+const themeToggle = document.getElementById('theme-toggle');
 
 const STORAGE_KEY = 'sasholom_chat_history';
 const CONTEXT_KEY = 'sasholom_context';
@@ -11,14 +12,30 @@ if (!askBtn) console.error('❌ Кнопка "Спросить" не найде�
 if (!askInput) console.error('❌ Поле ввода не найдено!');
 if (!chatHistory) console.error('❌ Чат-история не найдена!');
 
+// ===== ПРЕСЕТЫ-РОЛИ =====
+let currentRole = 'default';
+
+const rolePrompts = {
+  translator: 'Ты — профессиональный переводчик. Переведи следующее сообщение на русский язык, сохраняя смысл и стиль. Если сообщение уже на русском, переведи его на английский. Отвечай только переводом.',
+  poet: 'Ты — талантливый поэт. Отвечай на любое сообщение стихами, с рифмой и ритмом. Используй красивые образы и метафоры.',
+  coder: 'Ты — эксперт-программист. Отвечай как senior-разработчик: давай чистый, рабочий код с краткими пояснениями. Используй Markdown-блоки для кода.',
+  default: 'Ты — дружелюбный и умный помощник по имени SaSholom AI. Отвечай кратко, по делу, с лёгким юмором. Используй эмодзи там, где уместно. 😊'
+};
+
+function setRole(role) {
+  currentRole = role;
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.role === role);
+  });
+  localStorage.setItem('sasholom_role', role);
+}
+
 // ===== БЕЗОПАСНЫЙ РЕНДЕРИНГ MARKDOWN =====
 function renderMarkdown(text) {
   if (typeof marked === 'undefined') {
     console.warn('marked.js не загружен, вывожу как текст');
     return text;
   }
-  // html: false — запрещает вставку сырого HTML, экранирует теги
-  // breaks: true — переносы строк становятся <br>
   return marked.parse(text, { breaks: true, html: false });
 }
 
@@ -37,7 +54,6 @@ function saveHistory() {
   const messages = [];
   chatHistory.querySelectorAll('.message').forEach(m => {
     const isUser = m.classList.contains('user-message');
-    // Сохраняем исходный текст (без HTML-тегов) — берём из data-атрибута
     const rawText = m.querySelector('.bubble').getAttribute('data-raw') || '';
     if (!m.classList.contains('thinking')) {
       messages.push({ text: rawText, sender: isUser ? 'user' : 'ai' });
@@ -58,31 +74,28 @@ function saveContext(context) {
   localStorage.setItem(CONTEXT_KEY, JSON.stringify(trimmed));
 }
 
-// ===== ДОБАВЛЕНИЕ СООБЩЕНИЯ (с кнопкой копирования для AI) =====
+// ===== ДОБАВЛЕНИЕ СООБЩЕНИЯ (с кнопкой копирования) =====
 function addMessage(text, sender, save = true) {
   const message = document.createElement('div');
   message.className = `message ${sender}-message`;
   const avatar = sender === 'user' ? '👤' : '🧠';
-  
+
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
-  
+
   if (sender === 'ai') {
-    // AI-сообщения: рендерим Markdown → безопасный HTML
     bubble.innerHTML = renderMarkdown(text);
   } else {
-    // Пользовательские сообщения: чистый текст
     bubble.textContent = text;
   }
-  
-  // Сохраняем исходный текст для localStorage и копирования
+
   bubble.setAttribute('data-raw', text);
-  
-  message.innerHTML = ''; // очищаем
+
+  message.innerHTML = '';
   message.appendChild(document.createElement('span')).className = 'avatar';
   message.querySelector('.avatar').textContent = avatar;
   message.appendChild(bubble);
-  
+
   // Кнопка копирования только для AI-сообщений
   if (sender === 'ai') {
     const copyBtn = document.createElement('button');
@@ -103,7 +116,7 @@ function addMessage(text, sender, save = true) {
     });
     message.appendChild(copyBtn);
   }
-  
+
   chatHistory.appendChild(message);
   chatHistory.scrollTop = chatHistory.scrollHeight;
   if (save) saveHistory();
@@ -132,7 +145,11 @@ async function askAI() {
     const res = await fetch('/api/ask-deepseek', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, history: context })
+      body: JSON.stringify({
+        question,
+        history: context,
+        systemPrompt: rolePrompts[currentRole]
+      })
     });
 
     const data = await res.json();
@@ -162,20 +179,7 @@ function clearChat() {
   addMessage('Привет! Задай мне любой вопрос 😎', 'ai');
 }
 
-// ===== СОБЫТИЯ =====
-if (askBtn) askBtn.addEventListener('click', askAI);
-if (clearBtn) clearBtn.addEventListener('click', clearChat);
-if (askInput) {
-  askInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      askAI();
-    }
-  });
-}
 // ===== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ =====
-const themeToggle = document.getElementById('theme-toggle');
-
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('sasholom_theme', theme);
@@ -190,12 +194,32 @@ function toggleTheme() {
   setTheme(next);
 }
 
-// Загружаем сохранённую тему
+// ===== СОБЫТИЯ =====
+if (askBtn) askBtn.addEventListener('click', askAI);
+if (clearBtn) clearBtn.addEventListener('click', clearChat);
+if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+
+if (askInput) {
+  askInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      askAI();
+    }
+  });
+}
+
+// Обработчики пресетов
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setRole(btn.dataset.role);
+  });
+});
+
+// ===== ИНИЦИАЛИЗАЦИЯ =====
 const savedTheme = localStorage.getItem('sasholom_theme') || 'dark';
 setTheme(savedTheme);
 
-if (themeToggle) {
-  themeToggle.addEventListener('click', toggleTheme);
-}
-// ===== ЗАПУСК =====
-loadHistory();  
+const savedRole = localStorage.getItem('sasholom_role') || 'default';
+setRole(savedRole);
+
+loadHistory();
