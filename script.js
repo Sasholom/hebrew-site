@@ -6,11 +6,21 @@ const clearBtn = document.getElementById('clear-chat-btn');
 const STORAGE_KEY = 'sasholom_chat_history';
 const CONTEXT_KEY = 'sasholom_context';
 
-// Проверка, что элементы найдены
+// Проверка DOM (для отладки)
 if (!askBtn) console.error('❌ Кнопка "Спросить" не найдена!');
 if (!askInput) console.error('❌ Поле ввода не найдено!');
 if (!chatHistory) console.error('❌ Чат-история не найдена!');
-console.log('✅ DOM-элементы загружены');
+
+// ===== БЕЗОПАСНЫЙ РЕНДЕРИНГ MARKDOWN =====
+function renderMarkdown(text) {
+  if (typeof marked === 'undefined') {
+    console.warn('marked.js не загружен, вывожу как текст');
+    return text;
+  }
+  // html: false — запрещает вставку сырого HTML, экранирует теги
+  // breaks: true — переносы строк становятся <br>
+  return marked.parse(text, { breaks: true, html: false });
+}
 
 // ===== ЗАГРУЗКА ИСТОРИИ =====
 function loadHistory() {
@@ -20,7 +30,6 @@ function loadHistory() {
     chatHistory.innerHTML = '';
     messages.forEach(msg => addMessage(msg.text, msg.sender, false));
   }
-  console.log('📜 История загружена');
 }
 
 // ===== СОХРАНЕНИЕ ИСТОРИИ =====
@@ -28,15 +37,16 @@ function saveHistory() {
   const messages = [];
   chatHistory.querySelectorAll('.message').forEach(m => {
     const isUser = m.classList.contains('user-message');
-    const text = m.querySelector('.bubble').innerHTML;
+    // Сохраняем исходный текст (без HTML-тегов) — берём из data-атрибута
+    const rawText = m.querySelector('.bubble').getAttribute('data-raw') || '';
     if (!m.classList.contains('thinking')) {
-      messages.push({ text, sender: isUser ? 'user' : 'ai' });
+      messages.push({ text: rawText, sender: isUser ? 'user' : 'ai' });
     }
   });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
 }
 
-// ===== ПОЛУЧЕНИЕ КОНТЕКСТА =====
+// ===== ПОЛУЧЕНИЕ КОНТЕКСТА ДЛЯ ИИ =====
 function getContext() {
   const saved = localStorage.getItem(CONTEXT_KEY);
   return saved ? JSON.parse(saved) : [];
@@ -48,14 +58,52 @@ function saveContext(context) {
   localStorage.setItem(CONTEXT_KEY, JSON.stringify(trimmed));
 }
 
-// ===== ДОБАВЛЕНИЕ СООБЩЕНИЯ =====
+// ===== ДОБАВЛЕНИЕ СООБЩЕНИЯ (с кнопкой копирования для AI) =====
 function addMessage(text, sender, save = true) {
-  console.log(`💬 Добавляю сообщение: ${sender} — "${text.slice(0, 30)}..."`);
   const message = document.createElement('div');
   message.className = `message ${sender}-message`;
   const avatar = sender === 'user' ? '👤' : '🧠';
-  message.innerHTML = `<span class="avatar">${avatar}</span><div class="bubble"></div>`;
-  message.querySelector('.bubble').textContent = text; // безопасный вывод
+  
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  
+  if (sender === 'ai') {
+    // AI-сообщения: рендерим Markdown → безопасный HTML
+    bubble.innerHTML = renderMarkdown(text);
+  } else {
+    // Пользовательские сообщения: чистый текст
+    bubble.textContent = text;
+  }
+  
+  // Сохраняем исходный текст для localStorage и копирования
+  bubble.setAttribute('data-raw', text);
+  
+  message.innerHTML = ''; // очищаем
+  message.appendChild(document.createElement('span')).className = 'avatar';
+  message.querySelector('.avatar').textContent = avatar;
+  message.appendChild(bubble);
+  
+  // Кнопка копирования только для AI-сообщений
+  if (sender === 'ai') {
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.innerHTML = '📋';
+    copyBtn.title = 'Скопировать ответ';
+    copyBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const rawText = bubble.getAttribute('data-raw') || '';
+      try {
+        await navigator.clipboard.writeText(rawText);
+        copyBtn.innerHTML = '✓';
+        setTimeout(() => { copyBtn.innerHTML = '📋'; }, 2000);
+      } catch (err) {
+        copyBtn.innerHTML = '❌';
+        setTimeout(() => { copyBtn.innerHTML = '📋'; }, 2000);
+      }
+    });
+    message.appendChild(copyBtn);
+  }
+  
   chatHistory.appendChild(message);
   chatHistory.scrollTop = chatHistory.scrollHeight;
   if (save) saveHistory();
@@ -64,12 +112,8 @@ function addMessage(text, sender, save = true) {
 
 // ===== ОТПРАВКА ВОПРОСА =====
 async function askAI() {
-  console.log('🚀 askAI вызвана');
   const question = askInput.value.trim();
-  if (!question) {
-    console.warn('⚠️ Пустой вопрос');
-    return;
-  }
+  if (!question) return;
   if (question.length > 2000) {
     addMessage('⚠️ Сообщение слишком длинное (макс. 2000 символов)', 'ai');
     return;
@@ -85,16 +129,13 @@ async function askAI() {
   const context = getContext();
 
   try {
-    console.log('📡 Отправляю запрос на /api/ask-deepseek...');
     const res = await fetch('/api/ask-deepseek', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question, history: context })
     });
 
-    console.log('📨 Ответ получен, статус:', res.status);
     const data = await res.json();
-    console.log('📦 Данные:', data);
     thinking.remove();
 
     const answer = data.answer || data.error || '🤷 Извини, что-то пошло не так. Попробуй ещё раз.';
@@ -105,7 +146,6 @@ async function askAI() {
     saveContext(context);
 
   } catch (err) {
-    console.error('🔥 Ошибка при fetch:', err);
     thinking.remove();
     addMessage('❌ Не могу соединиться с сервером. Проверь интернет и попробуй снова.', 'ai');
   } finally {
@@ -115,7 +155,6 @@ async function askAI() {
 
 // ===== ОЧИСТКА ЧАТА =====
 function clearChat() {
-  console.log('🗑️ Очистка чата');
   if (!confirm('Точно удалить всю историю чата? 🗑️')) return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(CONTEXT_KEY);
@@ -124,17 +163,8 @@ function clearChat() {
 }
 
 // ===== СОБЫТИЯ =====
-if (askBtn) {
-  askBtn.addEventListener('click', askAI);
-  console.log('👆 Обработчик клика повешен на кнопку "Спросить"');
-} else {
-  console.error('❌ Не могу повесить обработчик — кнопка не найдена');
-}
-
-if (clearBtn) {
-  clearBtn.addEventListener('click', clearChat);
-}
-
+if (askBtn) askBtn.addEventListener('click', askAI);
+if (clearBtn) clearBtn.addEventListener('click', clearChat);
 if (askInput) {
   askInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -145,5 +175,4 @@ if (askInput) {
 }
 
 // ===== ЗАПУСК =====
-loadHistory();
-console.log('🏁 Скрипт инициализирован');
+loadHistory();  
