@@ -9,45 +9,43 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Нет вопроса' });
   }
 
-  // Формируем массив сообщений с историей
-  const messages = [
-    {
-      role: 'system',
-      content: 'Ты — дружелюбный и умный помощник по имени SaSholom AI. Отвечай кратко, по делу, с лёгким юмором. Используй эмодзи там, где уместно. 😊'
-    }
-  ];
+  // Формируем историю для ChadGPT
+  const chatHistory = [];
 
-  // Добавляем историю разговора (последние 10 сообщений)
+  // Системный промпт
+  chatHistory.push({
+    role: 'system',
+    content: 'Ты — дружелюбный и умный помощник по имени SaSholom AI. Отвечай кратко, по делу, с лёгким юмором. Используй эмодзи там, где уместно. 😊'
+  });
+
+  // Добавляем последние 10 сообщений истории
   if (Array.isArray(history)) {
     history.slice(-10).forEach(msg => {
-      messages.push({ role: msg.role, content: msg.content });
+      chatHistory.push({ role: msg.role, content: msg.content });
     });
   }
 
-  // Добавляем текущий вопрос
-  messages.push({ role: 'user', content: question });
-
   try {
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    const response = await fetch('https://ask.chadgpt.ru/api/public/gpt-4o-mini', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.CHAD_API_KEY}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 1000
+        message: question,
+        api_key: process.env.CHAD_API_KEY,
+        history: chatHistory
       })
     });
 
     const data = await response.json();
 
-    if (data.choices && data.choices[0]) {
-      return res.status(200).json({ answer: data.choices[0].message.content });
+    if (data.is_success) {
+      return res.status(200).json({ answer: data.response });
     } else {
-      return res.status(500).json({ error: 'Пустой ответ от ИИ' });
+      return res.status(500).json({ 
+        error: data.error_message || 'Ошибка ChadGPT 🤷' 
+      });
     }
   } catch (err) {
     return res.status(500).json({ error: 'Ошибка: ' + err.message });
