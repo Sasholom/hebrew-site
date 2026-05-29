@@ -269,5 +269,69 @@ setTheme(savedTheme);
 
 const savedRole = localStorage.getItem('sasholom_role') || 'default';
 setRole(savedRole);
+// ===== ГОЛОСОВОЙ ВВОД =====
+const voiceBtn = document.getElementById('voice-btn');
+let isListening = false;
+let recognition = null;
 
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'ru-RU';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    askInput.value = transcript;
+    stopListening();
+    // Автоматически отправляем вопрос
+    askAI();
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Ошибка распознавания:', event.error);
+    stopListening();
+    addMessage('❌ Ошибка распознавания речи. Попробуй ещё раз.', 'ai');
+  };
+
+  recognition.onend = () => {
+    stopListening();
+  };
+}
+
+function startListening() {
+  if (!recognition) {
+    addMessage('🎤 Голосовой ввод не поддерживается в твоём браузере. Попробуй Chrome.', 'ai');
+    return;
+  }
+  try {
+    recognition.start();
+    isListening = true;
+    voiceBtn.classList.add('listening');
+    voiceBtn.textContent = '🔴';
+  } catch (err) {
+    console.error('Ошибка старта:', err);
+    stopListening();
+  }
+}
+
+function stopListening() {
+  isListening = false;
+  voiceBtn.classList.remove('listening');
+  voiceBtn.textContent = '🎤';
+  if (recognition) {
+    try { recognition.stop(); } catch(e) {}
+  }
+}
+
+if (voiceBtn) {
+  voiceBtn.addEventListener('click', () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  });
+}
 loadHistory();
