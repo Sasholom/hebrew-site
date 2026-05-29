@@ -34,7 +34,12 @@ const translations = {
     clearConfirm: 'Точно удалить всю историю чата? 🗑️',
     voiceError: '❌ Ошибка распознавания речи. Попробуй ещё раз.',
     voiceUnsupported: '🎤 Голосовой ввод не поддерживается в твоём браузере. Попробуй Chrome.',
-    presets: ['🌐 Переводчик', '🎭 Поэт', '💻 Кодер'],
+    roleLabels: {
+      default: '💬 Обычный',
+      translator: '🌐 Переводчик',
+      poet: '🎭 Поэт',
+      coder: '💻 Кодер'
+    },
     footer: 'Made with 💚 by S.K.'
   },
   en: {
@@ -53,7 +58,12 @@ const translations = {
     clearConfirm: 'Really delete entire chat history? 🗑️',
     voiceError: '❌ Speech recognition error. Please try again.',
     voiceUnsupported: '🎤 Voice input not supported in your browser. Try Chrome.',
-    presets: ['🌐 Translator', '🎭 Poet', '💻 Coder'],
+    roleLabels: {
+      default: '💬 Default',
+      translator: '🌐 Translator',
+      poet: '🎭 Poet',
+      coder: '💻 Coder'
+    },
     footer: 'Made with 💚 by S.K.'
   },
   he: {
@@ -72,7 +82,12 @@ const translations = {
     clearConfirm: 'בטוח למחוק את כל ההיסטוריה? 🗑️',
     voiceError: '❌ שגיאת זיהוי דיבור. נסה שוב.',
     voiceUnsupported: '🎤 קלט קולי לא נתמך בדפדפן שלך. נסה Chrome.',
-    presets: ['🌐 מתרגם', '🎭 משורר', '💻 מתכנת'],
+    roleLabels: {
+      default: '💬 רגיל',
+      translator: '🌐 מתרגם',
+      poet: '🎭 משורר',
+      coder: '💻 מתכנת'
+    },
     footer: 'Made with 💚 by S.K.'
   }
 };
@@ -91,13 +106,15 @@ function applyLanguage(lang) {
   clearBtn.textContent = t.clearBtn;
   document.querySelector('footer').innerHTML = t.footer.replace('💚', '<span>💚</span>');
 
-  const presetBtns = document.querySelectorAll('.preset-btn');
-  if (presetBtns.length >= 3) {
-    presetBtns[0].textContent = t.presets[0];
-    presetBtns[1].textContent = t.presets[1];
-    presetBtns[2].textContent = t.presets[2];
-  }
+  // Обновляем пресеты по data-role
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    const role = btn.dataset.role;
+    if (role && t.roleLabels[role]) {
+      btn.textContent = t.roleLabels[role];
+    }
+  });
 
+  // Кнопки копирования у существующих AI-сообщений
   document.querySelectorAll('.ai-message .copy-btn').forEach(btn => {
     if (btn.textContent === 'Копировать' || btn.textContent === 'Copy' || btn.textContent === 'העתק') {
       btn.textContent = t.copyBtn;
