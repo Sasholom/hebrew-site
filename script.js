@@ -7,7 +7,7 @@ const themeToggle = document.getElementById('theme-toggle');
 const STORAGE_KEY = 'sasholom_chat_history';
 const CONTEXT_KEY = 'sasholom_context';
 
-// Проверка DOM (для отладки)
+// Проверка DOM
 if (!askBtn) console.error('❌ Кнопка "Спросить" не найдена!');
 if (!askInput) console.error('❌ Поле ввода не найдено!');
 if (!chatHistory) console.error('❌ Чат-история не найдена!');
@@ -29,13 +29,7 @@ function setRole(role) {
   });
   localStorage.setItem('sasholom_role', role);
 }
-// ===== ПОДСВЕТКА КОДА =====
-function highlightCode(element) {
-  if (typeof hljs === 'undefined') return;
-  element.querySelectorAll('pre code').forEach(block => {
-    hljs.highlightElement(block);
-  });
-}
+
 // ===== БЕЗОПАСНЫЙ РЕНДЕРИНГ MARKDOWN =====
 function renderMarkdown(text) {
   if (typeof marked === 'undefined') {
@@ -43,6 +37,30 @@ function renderMarkdown(text) {
     return text;
   }
   return marked.parse(text, { breaks: true, html: false });
+}
+
+// ===== ПОДСВЕТКА КОДА =====
+function highlightCode(element) {
+  if (typeof hljs === 'undefined') return;
+  element.querySelectorAll('pre code').forEach(block => {
+    hljs.highlightElement(block);
+  });
+}
+
+// ===== ЭФФЕКТ ПЕЧАТИ (СТРИМИНГ) =====
+function typewriterEffect(bubble, fullText, speed = 20, onComplete) {
+  let i = 0;
+  bubble.textContent = ''; // очищаем, если было
+  const interval = setInterval(() => {
+    if (i < fullText.length) {
+      bubble.textContent += fullText.charAt(i);
+      i++;
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    } else {
+      clearInterval(interval);
+      if (onComplete) onComplete();
+    }
+  }, speed);
 }
 
 // ===== ЗАГРУЗКА ИСТОРИИ =====
@@ -68,7 +86,7 @@ function saveHistory() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
 }
 
-// ===== ПОЛУЧЕНИЕ КОНТЕКСТА ДЛЯ ИИ =====
+// ===== ПОЛУЧЕНИЕ КОНТЕКСТА =====
 function getContext() {
   const saved = localStorage.getItem(CONTEXT_KEY);
   return saved ? JSON.parse(saved) : [];
@@ -80,7 +98,7 @@ function saveContext(context) {
   localStorage.setItem(CONTEXT_KEY, JSON.stringify(trimmed));
 }
 
-// ===== ДОБАВЛЕНИЕ СООБЩЕНИЯ (с кнопкой копирования) =====
+// ===== ДОБАВЛЕНИЕ СООБЩЕНИЯ =====
 function addMessage(text, sender, save = true) {
   const message = document.createElement('div');
   message.className = `message ${sender}-message`;
@@ -102,7 +120,7 @@ function addMessage(text, sender, save = true) {
   message.querySelector('.avatar').textContent = avatar;
   message.appendChild(bubble);
 
-  // Кнопка копирования только для AI-сообщений
+  // Кнопка копирования для AI
   if (sender === 'ai') {
     const copyBtn = document.createElement('button');
     copyBtn.className = 'copy-btn';
@@ -132,7 +150,7 @@ function addMessage(text, sender, save = true) {
   return message;
 }
 
-// ===== ОТПРАВКА ВОПРОСА =====
+// ===== ОТПРАВКА ВОПРОСА (с эффектом печати) =====
 async function askAI() {
   const question = askInput.value.trim();
   if (!question) return;
@@ -165,11 +183,23 @@ async function askAI() {
     thinking.remove();
 
     const answer = data.answer || data.error || '🤷 Извини, что-то пошло не так. Попробуй ещё раз.';
-    addMessage(answer, 'ai');
 
-    context.push({ role: 'user', content: question });
-    context.push({ role: 'assistant', content: answer });
-    saveContext(context);
+    // Создаём пустое AI-сообщение для эффекта печати
+    const aiMsg = addMessage('', 'ai', false);
+    const bubble = aiMsg.querySelector('.bubble');
+
+    typewriterEffect(bubble, answer, 20, () => {
+      // Когда печать завершена — применяем Markdown и подсветку
+      bubble.innerHTML = renderMarkdown(answer);
+      bubble.setAttribute('data-raw', answer);
+      highlightCode(aiMsg);
+
+      // Сохраняем контекст и историю
+      context.push({ role: 'user', content: question });
+      context.push({ role: 'assistant', content: answer });
+      saveContext(context);
+      saveHistory();
+    });
 
   } catch (err) {
     thinking.remove();
