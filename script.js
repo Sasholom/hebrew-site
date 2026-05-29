@@ -47,20 +47,23 @@ function highlightCode(element) {
   });
 }
 
-// ===== ЭФФЕКТ ПЕЧАТИ (СТРИМИНГ) =====
-function typewriterEffect(bubble, fullText, speed = 20, onComplete) {
+// ===== ЭФФЕКТ ПЕЧАТИ (по словам) =====
+function typewriterEffect(bubble, fullText, speed = 30, onComplete) {
+  const words = fullText.split(/(\s+)/); // разбиваем с пробелами
   let i = 0;
-  bubble.textContent = ''; // очищаем, если было
-  const interval = setInterval(() => {
-    if (i < fullText.length) {
-      bubble.textContent += fullText.charAt(i);
+  bubble.textContent = '';
+
+  function typeNext() {
+    if (i < words.length) {
+      bubble.textContent += words[i];
       i++;
       chatHistory.scrollTop = chatHistory.scrollHeight;
+      setTimeout(typeNext, speed);
     } else {
-      clearInterval(interval);
       if (onComplete) onComplete();
     }
-  }, speed);
+  }
+  typeNext();
 }
 
 // ===== ЗАГРУЗКА ИСТОРИИ =====
@@ -150,7 +153,7 @@ function addMessage(text, sender, save = true) {
   return message;
 }
 
-// ===== ОТПРАВКА ВОПРОСА (с эффектом печати) =====
+// ===== ОТПРАВКА ВОПРОСА (с эффектом печати по словам) =====
 async function askAI() {
   const question = askInput.value.trim();
   if (!question) return;
@@ -162,6 +165,7 @@ async function askAI() {
   addMessage(question, 'user');
   askInput.value = '';
 
+  // Показываем "Думаю..."
   const thinking = addMessage('Думаю...', 'ai', false);
   thinking.classList.add('thinking');
   askBtn.disabled = true;
@@ -183,13 +187,16 @@ async function askAI() {
     thinking.remove();
 
     const answer = data.answer || data.error || '🤷 Извини, что-то пошло не так. Попробуй ещё раз.';
+    console.log('✅ Ответ получен, начинаю печать:', answer.slice(0, 30) + '...');
 
-    // Создаём пустое AI-сообщение для эффекта печати
+    // Создаём пустое AI-сообщение для печати
     const aiMsg = addMessage('', 'ai', false);
     const bubble = aiMsg.querySelector('.bubble');
+    bubble.innerHTML = ''; // убираем возможную обёртку Markdown
+    bubble.textContent = '';
 
-    typewriterEffect(bubble, answer, 20, () => {
-      // Когда печать завершена — применяем Markdown и подсветку
+    typewriterEffect(bubble, answer, 30, () => {
+      // По окончании печати заменяем текст на отрендеренный Markdown
       bubble.innerHTML = renderMarkdown(answer);
       bubble.setAttribute('data-raw', answer);
       highlightCode(aiMsg);
@@ -199,11 +206,13 @@ async function askAI() {
       context.push({ role: 'assistant', content: answer });
       saveContext(context);
       saveHistory();
+      console.log('✨ Печать завершена');
     });
 
   } catch (err) {
     thinking.remove();
     addMessage('❌ Не могу соединиться с сервером. Проверь интернет и попробуй снова.', 'ai');
+    console.error('🔥 Ошибка:', err);
   } finally {
     askBtn.disabled = false;
   }
