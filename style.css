@@ -504,3 +504,20 @@ html, body {
   70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
   100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
 }
+/* ===== КНОПКА ВЫБОРА ЯЗЫКА ===== */
+.lang-btn {
+  background: var(--clear-btn-bg);
+  border: 1px solid var(--clear-btn-border);
+  color: var(--text-color);
+  font-size: 0.9em;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
+}
+.lang-btn:hover {
+  background: var(--copy-btn-hover-bg);
+  transform: scale(1.05);
+}

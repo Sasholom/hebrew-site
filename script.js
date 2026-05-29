@@ -3,6 +3,8 @@ const askInput = document.getElementById('ai-question');
 const chatHistory = document.getElementById('chat-history');
 const clearBtn = document.getElementById('clear-chat-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const voiceBtn = document.getElementById('voice-btn');
+const langBtn = document.getElementById('lang-btn');
 
 const STORAGE_KEY = 'sasholom_chat_history';
 const CONTEXT_KEY = 'sasholom_context';
@@ -49,7 +51,7 @@ function highlightCode(element) {
 
 // ===== ЭФФЕКТ ПЕЧАТИ (по словам) =====
 function typewriterEffect(bubble, fullText, speed = 30, onComplete) {
-  const words = fullText.split(/(\s+)/); // разбиваем с пробелами
+  const words = fullText.split(/(\s+)/);
   let i = 0;
   bubble.textContent = '';
 
@@ -153,7 +155,7 @@ function addMessage(text, sender, save = true) {
   return message;
 }
 
-// ===== ОТПРАВКА ВОПРОСА (с эффектом печати по словам) =====
+// ===== ОТПРАВКА ВОПРОСА (с эффектом печати) =====
 async function askAI() {
   const question = askInput.value.trim();
   if (!question) return;
@@ -165,7 +167,6 @@ async function askAI() {
   addMessage(question, 'user');
   askInput.value = '';
 
-  // Показываем "Думаю..."
   const thinking = addMessage('Думаю...', 'ai', false);
   thinking.classList.add('thinking');
   askBtn.disabled = true;
@@ -189,19 +190,16 @@ async function askAI() {
     const answer = data.answer || data.error || '🤷 Извини, что-то пошло не так. Попробуй ещё раз.';
     console.log('✅ Ответ получен, начинаю печать:', answer.slice(0, 30) + '...');
 
-    // Создаём пустое AI-сообщение для печати
     const aiMsg = addMessage('', 'ai', false);
     const bubble = aiMsg.querySelector('.bubble');
-    bubble.innerHTML = ''; // убираем возможную обёртку Markdown
+    bubble.innerHTML = '';
     bubble.textContent = '';
 
     typewriterEffect(bubble, answer, 30, () => {
-      // По окончании печати заменяем текст на отрендеренный Markdown
       bubble.innerHTML = renderMarkdown(answer);
       bubble.setAttribute('data-raw', answer);
       highlightCode(aiMsg);
 
-      // Сохраняем контекст и историю
       context.push({ role: 'user', content: question });
       context.push({ role: 'assistant', content: answer });
       saveContext(context);
@@ -242,10 +240,98 @@ function toggleTheme() {
   setTheme(next);
 }
 
+// ===== ГОЛОСОВОЙ ВВОД (мультиязычный) =====
+const voiceLangs = [
+  { code: 'ru-RU', label: '🇷🇺 RU' },
+  { code: 'en-US', label: '🇺🇸 EN' },
+  { code: 'he-IL', label: '🇮🇱 HE' }
+];
+let currentVoiceLang = 0; // индекс в voiceLangs
+let isListening = false;
+let recognition = null;
+
+function updateLangButton() {
+  if (langBtn) {
+    langBtn.textContent = voiceLangs[currentVoiceLang].label;
+  }
+}
+
+function switchLanguage() {
+  currentVoiceLang = (currentVoiceLang + 1) % voiceLangs.length;
+  updateLangButton();
+  // Если идёт прослушивание, перезапустим с новым языком
+  if (isListening) {
+    stopListening();
+    startListening();
+  }
+}
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    askInput.value = transcript;
+    stopListening();
+    askAI();
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Ошибка распознавания:', event.error);
+    stopListening();
+    addMessage('❌ Ошибка распознавания речи. Попробуй ещё раз.', 'ai');
+  };
+
+  recognition.onend = () => {
+    stopListening();
+  };
+}
+
+function startListening() {
+  if (!recognition) {
+    addMessage('🎤 Голосовой ввод не поддерживается в твоём браузере. Попробуй Chrome.', 'ai');
+    return;
+  }
+  try {
+    recognition.lang = voiceLangs[currentVoiceLang].code;
+    recognition.start();
+    isListening = true;
+    voiceBtn.classList.add('listening');
+    voiceBtn.textContent = '🔴';
+  } catch (err) {
+    console.error('Ошибка старта:', err);
+    stopListening();
+  }
+}
+
+function stopListening() {
+  isListening = false;
+  voiceBtn.classList.remove('listening');
+  voiceBtn.textContent = '🎤';
+  if (recognition) {
+    try { recognition.stop(); } catch(e) {}
+  }
+}
+
 // ===== СОБЫТИЯ =====
 if (askBtn) askBtn.addEventListener('click', askAI);
 if (clearBtn) clearBtn.addEventListener('click', clearChat);
 if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+if (voiceBtn) {
+  voiceBtn.addEventListener('click', () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  });
+}
+if (langBtn) {
+  langBtn.addEventListener('click', switchLanguage);
+}
 
 if (askInput) {
   askInput.addEventListener('keydown', (e) => {
@@ -269,69 +355,6 @@ setTheme(savedTheme);
 
 const savedRole = localStorage.getItem('sasholom_role') || 'default';
 setRole(savedRole);
-// ===== ГОЛОСОВОЙ ВВОД =====
-const voiceBtn = document.getElementById('voice-btn');
-let isListening = false;
-let recognition = null;
 
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
-  recognition.lang = 'ru-RU';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    askInput.value = transcript;
-    stopListening();
-    // Автоматически отправляем вопрос
-    askAI();
-  };
-
-  recognition.onerror = (event) => {
-    console.error('Ошибка распознавания:', event.error);
-    stopListening();
-    addMessage('❌ Ошибка распознавания речи. Попробуй ещё раз.', 'ai');
-  };
-
-  recognition.onend = () => {
-    stopListening();
-  };
-}
-
-function startListening() {
-  if (!recognition) {
-    addMessage('🎤 Голосовой ввод не поддерживается в твоём браузере. Попробуй Chrome.', 'ai');
-    return;
-  }
-  try {
-    recognition.start();
-    isListening = true;
-    voiceBtn.classList.add('listening');
-    voiceBtn.textContent = '🔴';
-  } catch (err) {
-    console.error('Ошибка старта:', err);
-    stopListening();
-  }
-}
-
-function stopListening() {
-  isListening = false;
-  voiceBtn.classList.remove('listening');
-  voiceBtn.textContent = '🎤';
-  if (recognition) {
-    try { recognition.stop(); } catch(e) {}
-  }
-}
-
-if (voiceBtn) {
-  voiceBtn.addEventListener('click', () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  });
-}
+updateLangButton();
 loadHistory();
