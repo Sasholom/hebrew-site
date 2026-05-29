@@ -375,3 +375,22 @@ html, body {
     margin-top: 10px;
   }
 }
+/* ===== КНОПКА КОПИРОВАНИЯ ===== */
+.copy-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1em;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 6px;
+  align-self: flex-start;
+  transition: all 0.2s;
+  line-height: 1;
+}
+.copy-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
+}
