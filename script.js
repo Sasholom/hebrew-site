@@ -16,7 +16,7 @@ if (!askBtn) console.error('❌ Кнопка "Спросить" не найде�
 if (!askInput) console.error('❌ Поле ввода не найдено!');
 if (!chatHistory) console.error('❌ Чат-история не найдена!');
 
-// ===== ЛОКАЛИЗАЦИЯ =====
+// ===== ЛОКАЛИЗАЦИЯ ИНТЕРФЕЙСА =====
 const translations = {
   ru: {
     title: '🚀 SaSholom',
@@ -91,7 +91,6 @@ function applyLanguage(lang) {
   clearBtn.textContent = t.clearBtn;
   document.querySelector('footer').innerHTML = t.footer.replace('💚', '<span>💚</span>');
 
-  // Обновляем пресеты
   const presetBtns = document.querySelectorAll('.preset-btn');
   if (presetBtns.length >= 3) {
     presetBtns[0].textContent = t.presets[0];
@@ -99,14 +98,12 @@ function applyLanguage(lang) {
     presetBtns[2].textContent = t.presets[2];
   }
 
-  // Обновляем кнопку копирования у существующих AI-сообщений
   document.querySelectorAll('.ai-message .copy-btn').forEach(btn => {
     if (btn.textContent === 'Копировать' || btn.textContent === 'Copy' || btn.textContent === 'העתק') {
       btn.textContent = t.copyBtn;
     }
   });
 
-  // Кнопка языка
   const langLabels = { ru: '🇷🇺 RU', en: '🇺🇸 EN', he: '🇮🇱 HE' };
   if (langToggle) langToggle.textContent = langLabels[lang];
 
@@ -131,7 +128,27 @@ function setRole(role) {
   localStorage.setItem('sasholom_role', role);
 }
 
-// ===== БЕЗОПАСНЫЙ РЕНДЕРИНГ MARKDOWN =====
+// ===== ВЫБОР ПРОВАЙДЕРА И МОДЕЛИ =====
+let currentProvider = 'chadgpt';
+let currentModelType = 'fast';
+
+function setProvider(provider) {
+  currentProvider = provider;
+  document.querySelectorAll('.provider-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.provider === provider);
+  });
+  localStorage.setItem('sasholom_provider', provider);
+}
+
+function setModelType(type) {
+  currentModelType = type;
+  document.querySelectorAll('.model-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.model === type);
+  });
+  localStorage.setItem('sasholom_model_type', type);
+}
+
+// ===== РЕНДЕРИНГ MARKDOWN =====
 function renderMarkdown(text) {
   if (typeof marked === 'undefined') {
     console.warn('marked.js не загружен, вывожу как текст');
@@ -148,7 +165,7 @@ function highlightCode(element) {
   });
 }
 
-// ===== ЭФФЕКТ ПЕЧАТИ (по словам) =====
+// ===== ЭФФЕКТ ПЕЧАТИ ПО СЛОВАМ =====
 function typewriterEffect(bubble, fullText, speed = 30, onComplete) {
   const words = fullText.split(/(\s+)/);
   let i = 0;
@@ -190,13 +207,12 @@ function saveHistory() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
 }
 
-// ===== ПОЛУЧЕНИЕ КОНТЕКСТА =====
+// ===== КОНТЕКСТ ДЛЯ ИИ =====
 function getContext() {
   const saved = localStorage.getItem(CONTEXT_KEY);
   return saved ? JSON.parse(saved) : [];
 }
 
-// ===== СОХРАНЕНИЕ КОНТЕКСТА =====
 function saveContext(context) {
   const trimmed = context.slice(-10);
   localStorage.setItem(CONTEXT_KEY, JSON.stringify(trimmed));
@@ -280,7 +296,9 @@ async function askAI() {
       body: JSON.stringify({
         question,
         history: context,
-        systemPrompt: rolePrompts[currentRole]
+        systemPrompt: rolePrompts[currentRole],
+        provider: currentProvider,
+        modelType: currentModelType
       })
     });
 
@@ -416,7 +434,7 @@ function stopListening() {
   }
 }
 
-// ===== СОБЫТИЯ =====
+// ===== ОБРАБОТЧИКИ СОБЫТИЙ =====
 if (askBtn) askBtn.addEventListener('click', askAI);
 if (clearBtn) clearBtn.addEventListener('click', clearChat);
 if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
@@ -446,9 +464,24 @@ if (askInput) {
   });
 }
 
+// Обработчики пресетов
 document.querySelectorAll('.preset-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     setRole(btn.dataset.role);
+  });
+});
+
+// Обработчики провайдеров
+document.querySelectorAll('.provider-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setProvider(btn.dataset.provider);
+  });
+});
+
+// Обработчики моделей
+document.querySelectorAll('.model-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setModelType(btn.dataset.model);
   });
 });
 
@@ -461,6 +494,12 @@ setRole(savedRole);
 
 const savedUILang = localStorage.getItem(UI_LANG_KEY) || 'ru';
 applyLanguage(savedUILang);
+
+const savedProvider = localStorage.getItem('sasholom_provider') || 'chadgpt';
+setProvider(savedProvider);
+
+const savedModelType = localStorage.getItem('sasholom_model_type') || 'fast';
+setModelType(savedModelType);
 
 updateLangButton();
 loadHistory();
