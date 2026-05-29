@@ -1,5 +1,3 @@
-// api/ask-deepseek.js
-
 // Простейший in-memory rate limiter (действует, пока функция "тёплая")
 const rateLimit = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 минута
@@ -27,7 +25,7 @@ export default async function handler(req, res) {
   }
   // --- Конец Rate Limiting ---
 
-  const { question, history } = req.body;
+  const { question, history, systemPrompt } = req.body;
 
   // Валидация вопроса
   if (!question || typeof question !== 'string' || question.trim().length === 0) {
@@ -40,10 +38,10 @@ export default async function handler(req, res) {
   // Формируем историю для ChadGPT
   const chatHistory = [];
 
-  // Системный промпт
+  // Системный промпт (кастомный или дефолтный)
   chatHistory.push({
     role: 'system',
-    content: 'Ты — дружелюбный и умный помощник по имени SaSholom AI. Отвечай кратко, по делу, с лёгким юмором. Используй эмодзи там, где уместно. 😊'
+    content: systemPrompt || 'Ты — дружелюбный и умный помощник по имени SaSholom AI. Отвечай кратко, по делу, с лёгким юмором. Используй эмодзи там, где уместно. 😊'
   });
 
   // Добавляем последние 10 сообщений истории (если есть)
