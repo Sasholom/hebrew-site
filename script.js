@@ -3,16 +3,115 @@ const askInput = document.getElementById('ai-question');
 const chatHistory = document.getElementById('chat-history');
 const clearBtn = document.getElementById('clear-chat-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const langToggle = document.getElementById('lang-toggle');
 const voiceBtn = document.getElementById('voice-btn');
 const langBtn = document.getElementById('lang-btn');
 
 const STORAGE_KEY = 'sasholom_chat_history';
 const CONTEXT_KEY = 'sasholom_context';
+const UI_LANG_KEY = 'sasholom_ui_lang';
 
 // Проверка DOM
 if (!askBtn) console.error('❌ Кнопка "Спросить" не найдена!');
 if (!askInput) console.error('❌ Поле ввода не найдено!');
 if (!chatHistory) console.error('❌ Чат-история не найдена!');
+
+// ===== ЛОКАЛИЗАЦИЯ =====
+const translations = {
+  ru: {
+    title: '🚀 SaSholom',
+    cardTitle: '🧠 Hebrew AI',
+    placeholder: 'Задай любой вопрос...',
+    askBtn: 'Спросить 💬',
+    clearBtn: '🗑️ Очистить чат',
+    welcome: 'Привет! Задай мне любой вопрос 😎',
+    thinking: 'Думаю...',
+    copyBtn: 'Копировать',
+    copied: 'Скопировано ✓',
+    error: 'Ошибка',
+    longMsg: '⚠️ Сообщение слишком длинное (макс. 2000 символов)',
+    serverError: '❌ Не могу соединиться с сервером. Проверь интернет и попробуй снова.',
+    clearConfirm: 'Точно удалить всю историю чата? 🗑️',
+    voiceError: '❌ Ошибка распознавания речи. Попробуй ещё раз.',
+    voiceUnsupported: '🎤 Голосовой ввод не поддерживается в твоём браузере. Попробуй Chrome.',
+    presets: ['🌐 Переводчик', '🎭 Поэт', '💻 Кодер'],
+    footer: 'Made with 💚 by S.K.'
+  },
+  en: {
+    title: '🚀 SaSholom',
+    cardTitle: '🧠 Hebrew AI',
+    placeholder: 'Ask any question...',
+    askBtn: 'Ask 💬',
+    clearBtn: '🗑️ Clear chat',
+    welcome: 'Hello! Ask me anything 😎',
+    thinking: 'Thinking...',
+    copyBtn: 'Copy',
+    copied: 'Copied ✓',
+    error: 'Error',
+    longMsg: '⚠️ Message too long (max 2000 chars)',
+    serverError: '❌ Cannot connect to server. Check internet and try again.',
+    clearConfirm: 'Really delete entire chat history? 🗑️',
+    voiceError: '❌ Speech recognition error. Please try again.',
+    voiceUnsupported: '🎤 Voice input not supported in your browser. Try Chrome.',
+    presets: ['🌐 Translator', '🎭 Poet', '💻 Coder'],
+    footer: 'Made with 💚 by S.K.'
+  },
+  he: {
+    title: '🚀 SaSholom',
+    cardTitle: '🧠 Hebrew AI',
+    placeholder: 'שאל כל שאלה...',
+    askBtn: 'שאל 💬',
+    clearBtn: '🗑️ נקה צ\'אט',
+    welcome: 'שלום! שאל אותי כל דבר 😎',
+    thinking: 'חושב...',
+    copyBtn: 'העתק',
+    copied: 'הועתק ✓',
+    error: 'שגיאה',
+    longMsg: '⚠️ הודעה ארוכה מדי (מקסימום 2000 תווים)',
+    serverError: '❌ לא ניתן להתחבר לשרת. בדוק את החיבור ונסה שוב.',
+    clearConfirm: 'בטוח למחוק את כל ההיסטוריה? 🗑️',
+    voiceError: '❌ שגיאת זיהוי דיבור. נסה שוב.',
+    voiceUnsupported: '🎤 קלט קולי לא נתמך בדפדפן שלך. נסה Chrome.',
+    presets: ['🌐 מתרגם', '🎭 משורר', '💻 מתכנת'],
+    footer: 'Made with 💚 by S.K.'
+  }
+};
+
+let currentUILang = 'ru';
+
+function applyLanguage(lang) {
+  currentUILang = lang;
+  const t = translations[lang];
+
+  document.title = t.title;
+  document.querySelector('h1').textContent = t.title;
+  document.querySelector('.card h2').textContent = t.cardTitle;
+  askInput.placeholder = t.placeholder;
+  askBtn.textContent = t.askBtn;
+  clearBtn.textContent = t.clearBtn;
+  document.querySelector('footer').innerHTML = t.footer.replace('💚', '<span>💚</span>');
+
+  // Обновляем пресеты
+  const presetBtns = document.querySelectorAll('.preset-btn');
+  if (presetBtns.length >= 3) {
+    presetBtns[0].textContent = t.presets[0];
+    presetBtns[1].textContent = t.presets[1];
+    presetBtns[2].textContent = t.presets[2];
+  }
+
+  // Обновляем кнопку копирования у существующих AI-сообщений
+  document.querySelectorAll('.ai-message .copy-btn').forEach(btn => {
+    if (btn.textContent === 'Копировать' || btn.textContent === 'Copy' || btn.textContent === 'העתק') {
+      btn.textContent = t.copyBtn;
+    }
+  });
+
+  // Кнопка языка
+  const langLabels = { ru: '🇷🇺 RU', en: '🇺🇸 EN', he: '🇮🇱 HE' };
+  if (langToggle) langToggle.textContent = langLabels[lang];
+
+  localStorage.setItem(UI_LANG_KEY, lang);
+}
 
 // ===== ПРЕСЕТЫ-РОЛИ =====
 let currentRole = 'default';
@@ -105,6 +204,7 @@ function saveContext(context) {
 
 // ===== ДОБАВЛЕНИЕ СООБЩЕНИЯ =====
 function addMessage(text, sender, save = true) {
+  const t = translations[currentUILang];
   const message = document.createElement('div');
   message.className = `message ${sender}-message`;
   const avatar = sender === 'user' ? '👤' : '🧠';
@@ -125,22 +225,21 @@ function addMessage(text, sender, save = true) {
   message.querySelector('.avatar').textContent = avatar;
   message.appendChild(bubble);
 
-  // Кнопка копирования для AI
   if (sender === 'ai') {
     const copyBtn = document.createElement('button');
     copyBtn.className = 'copy-btn';
-    copyBtn.textContent = 'Копировать';
-    copyBtn.title = 'Скопировать ответ';
+    copyBtn.textContent = t.copyBtn;
+    copyBtn.title = t.copyBtn;
     copyBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const rawText = bubble.getAttribute('data-raw') || '';
       try {
         await navigator.clipboard.writeText(rawText);
-        copyBtn.textContent = 'Скопировано ✓';
-        setTimeout(() => { copyBtn.textContent = 'Копировать'; }, 2000);
+        copyBtn.textContent = t.copied;
+        setTimeout(() => { copyBtn.textContent = t.copyBtn; }, 2000);
       } catch (err) {
-        copyBtn.textContent = 'Ошибка';
-        setTimeout(() => { copyBtn.textContent = 'Копировать'; }, 2000);
+        copyBtn.textContent = t.error;
+        setTimeout(() => { copyBtn.textContent = t.copyBtn; }, 2000);
       }
     });
     message.appendChild(copyBtn);
@@ -155,19 +254,20 @@ function addMessage(text, sender, save = true) {
   return message;
 }
 
-// ===== ОТПРАВКА ВОПРОСА (с эффектом печати) =====
+// ===== ОТПРАВКА ВОПРОСА =====
 async function askAI() {
+  const t = translations[currentUILang];
   const question = askInput.value.trim();
   if (!question) return;
   if (question.length > 2000) {
-    addMessage('⚠️ Сообщение слишком длинное (макс. 2000 символов)', 'ai');
+    addMessage(t.longMsg, 'ai');
     return;
   }
 
   addMessage(question, 'user');
   askInput.value = '';
 
-  const thinking = addMessage('Думаю...', 'ai', false);
+  const thinking = addMessage(t.thinking, 'ai', false);
   thinking.classList.add('thinking');
   askBtn.disabled = true;
 
@@ -209,7 +309,7 @@ async function askAI() {
 
   } catch (err) {
     thinking.remove();
-    addMessage('❌ Не могу соединиться с сервером. Проверь интернет и попробуй снова.', 'ai');
+    addMessage(t.serverError, 'ai');
     console.error('🔥 Ошибка:', err);
   } finally {
     askBtn.disabled = false;
@@ -218,11 +318,12 @@ async function askAI() {
 
 // ===== ОЧИСТКА ЧАТА =====
 function clearChat() {
-  if (!confirm('Точно удалить всю историю чата? 🗑️')) return;
+  const t = translations[currentUILang];
+  if (!confirm(t.clearConfirm)) return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(CONTEXT_KEY);
   chatHistory.innerHTML = '';
-  addMessage('Привет! Задай мне любой вопрос 😎', 'ai');
+  addMessage(t.welcome, 'ai');
 }
 
 // ===== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ =====
@@ -246,7 +347,7 @@ const voiceLangs = [
   { code: 'en-US', label: '🇺🇸 EN' },
   { code: 'he-IL', label: '🇮🇱 HE' }
 ];
-let currentVoiceLang = 0; // индекс в voiceLangs
+let currentVoiceLang = 0;
 let isListening = false;
 let recognition = null;
 
@@ -259,7 +360,6 @@ function updateLangButton() {
 function switchLanguage() {
   currentVoiceLang = (currentVoiceLang + 1) % voiceLangs.length;
   updateLangButton();
-  // Если идёт прослушивание, перезапустим с новым языком
   if (isListening) {
     stopListening();
     startListening();
@@ -282,7 +382,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   recognition.onerror = (event) => {
     console.error('Ошибка распознавания:', event.error);
     stopListening();
-    addMessage('❌ Ошибка распознавания речи. Попробуй ещё раз.', 'ai');
+    addMessage(translations[currentUILang].voiceError, 'ai');
   };
 
   recognition.onend = () => {
@@ -292,7 +392,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
 function startListening() {
   if (!recognition) {
-    addMessage('🎤 Голосовой ввод не поддерживается в твоём браузере. Попробуй Chrome.', 'ai');
+    addMessage(translations[currentUILang].voiceUnsupported, 'ai');
     return;
   }
   try {
@@ -320,6 +420,12 @@ function stopListening() {
 if (askBtn) askBtn.addEventListener('click', askAI);
 if (clearBtn) clearBtn.addEventListener('click', clearChat);
 if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+if (langToggle) langToggle.addEventListener('click', () => {
+  const langs = ['ru', 'en', 'he'];
+  const idx = langs.indexOf(currentUILang);
+  const next = langs[(idx + 1) % langs.length];
+  applyLanguage(next);
+});
 if (voiceBtn) {
   voiceBtn.addEventListener('click', () => {
     if (isListening) {
@@ -329,9 +435,7 @@ if (voiceBtn) {
     }
   });
 }
-if (langBtn) {
-  langBtn.addEventListener('click', switchLanguage);
-}
+if (langBtn) langBtn.addEventListener('click', switchLanguage);
 
 if (askInput) {
   askInput.addEventListener('keydown', (e) => {
@@ -342,7 +446,6 @@ if (askInput) {
   });
 }
 
-// Обработчики пресетов
 document.querySelectorAll('.preset-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     setRole(btn.dataset.role);
@@ -355,6 +458,9 @@ setTheme(savedTheme);
 
 const savedRole = localStorage.getItem('sasholom_role') || 'default';
 setRole(savedRole);
+
+const savedUILang = localStorage.getItem(UI_LANG_KEY) || 'ru';
+applyLanguage(savedUILang);
 
 updateLangButton();
 loadHistory();

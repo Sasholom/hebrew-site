@@ -4,7 +4,9 @@
   padding: 0;
   box-sizing: border-box;
 }
-
+.lang-toggle {
+  right: 70px; /* чтобы не наезжала на тему */
+}
 :root {
   /* Тёмная тема (по умолчанию) */
   --bg-gradient-start: #1e3c72;
