@@ -341,7 +341,7 @@ async function askAI() {
     return;
   }
 
-  // Сообщение пользователя: показываем либо текст, либо описание с фото
+  // Сообщение пользователя
   if (selectedImageBase64 && !question) {
     addMessage('📷 Посмотри фото и скажи, какое благословение нужно произнести', 'user');
   } else if (selectedImageBase64 && question) {
@@ -366,7 +366,7 @@ async function askAI() {
         history: context,
         systemPrompt: rolePrompts[currentRole],
         provider: currentProvider,
-        image:undefined
+        image: selectedImageBase64 || undefined
       })
     });
 
