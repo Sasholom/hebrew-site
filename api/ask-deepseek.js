@@ -1,14 +1,14 @@
 // api/ask-deepseek.js
-// Использует Chad API public для GPT и Gemini
+// Использует Chad API public для GPT, Gemini и Vision (Claude)
 
 const rateLimit = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000;
 const MAX_REQUESTS = 20;
 
-// Эндпоинты моделей Chad API
 const MODEL_ENDPOINTS = {
   chadgpt: 'gpt-5-nano',
-  gemini: 'gemini-3-flash'
+  gemini: 'gemini-3-flash',
+  vision: 'claude-3.7-sonnet'
 };
 
 export default async function handler(req, res) {
@@ -28,23 +28,28 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Слишком много запросов. Подожди минуту 😊' });
   }
 
-  const { question, history, systemPrompt, provider } = req.body;
+  const { question, history, systemPrompt, provider, image } = req.body;
 
-  // Валидация
-  if (!question || typeof question !== 'string' || question.trim().length === 0) {
-    return res.status(400).json({ error: 'Пустой вопрос' });
+  // Валидация: должен быть либо вопрос, либо изображение
+  if (!question && !image) {
+    return res.status(400).json({ error: 'Пустой запрос' });
   }
-  if (question.length > 2000) {
+  if (question && question.length > 2000) {
     return res.status(400).json({ error: 'Вопрос слишком длинный (макс. 2000 символов)' });
   }
 
-  const selectedProvider = provider || 'chadgpt';
-  const modelPath = MODEL_ENDPOINTS[selectedProvider];
-  if (!modelPath) {
-    return res.status(400).json({ error: 'Неверный провайдер' });
+  let modelPath;
+  if (image) {
+    modelPath = MODEL_ENDPOINTS.vision;
+  } else {
+    const selectedProvider = provider || 'chadgpt';
+    modelPath = MODEL_ENDPOINTS[selectedProvider];
+    if (!modelPath) {
+      return res.status(400).json({ error: 'Неверный провайдер' });
+    }
   }
 
-  // Формируем историю для Chad API
+  // Формируем историю
   const chatHistory = [];
   if (systemPrompt) {
     chatHistory.push({ role: 'system', content: systemPrompt });
@@ -63,14 +68,17 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API-ключ Chad не настроен на сервере' });
   }
 
+  const finalQuestion = question || 'Что это за объект? Какое благословение нужно произнести?';
+
   try {
     const response = await fetch(`https://ask.chadgpt.ru/api/public/${modelPath}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: question,
+        message: finalQuestion,
         api_key: apiKey,
-        history: chatHistory
+        history: chatHistory,
+        ...(image && { images: [image] })
       })
     });
 
