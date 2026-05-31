@@ -366,7 +366,7 @@ async function askAI() {
         history: context,
         systemPrompt: rolePrompts[currentRole],
         provider: currentProvider,
-        image: selectedImageBase64 || undefined
+        image:undefined
       })
     });
 
