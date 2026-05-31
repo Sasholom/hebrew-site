@@ -6,6 +6,8 @@ const themeToggle = document.getElementById('theme-toggle');
 const langToggle = document.getElementById('lang-toggle');
 const voiceBtn = document.getElementById('voice-btn');
 const langBtn = document.getElementById('lang-btn');
+const imageBtn = document.getElementById('image-btn');
+const imageInput = document.getElementById('image-input');
 
 const STORAGE_KEY = 'sasholom_chat_history';
 const CONTEXT_KEY = 'sasholom_context';
@@ -22,6 +24,7 @@ const translations = {
     title: '🚀 SaSholom',
     cardTitle: '🧠 Hebrew AI',
     placeholder: 'Задай любой вопрос...',
+    photoPlaceholder: '📷 Фото загружено. Задай вопрос или нажми "Спросить"',
     askBtn: 'Спросить 💬',
     clearBtn: '🗑️ Очистить чат',
     welcome: 'Привет! Задай мне любой вопрос 😎',
@@ -34,6 +37,8 @@ const translations = {
     clearConfirm: 'Точно удалить всю историю чата? 🗑️',
     voiceError: '❌ Ошибка распознавания речи. Попробуй ещё раз.',
     voiceUnsupported: '🎤 Голосовой ввод не поддерживается в твоём браузере. Попробуй Chrome.',
+    imageTooLarge: '⚠️ Фото слишком большое (макс 4MB)',
+    imageReadError: '❌ Ошибка чтения файла',
     roleLabels: {
       default: '💬 Обычный',
       translator: '🌐 Переводчик',
@@ -46,6 +51,7 @@ const translations = {
     title: '🚀 SaSholom',
     cardTitle: '🧠 Hebrew AI',
     placeholder: 'Ask any question...',
+    photoPlaceholder: '📷 Photo uploaded. Ask a question or press "Ask"',
     askBtn: 'Ask 💬',
     clearBtn: '🗑️ Clear chat',
     welcome: 'Hello! Ask me anything 😎',
@@ -58,6 +64,8 @@ const translations = {
     clearConfirm: 'Really delete entire chat history? 🗑️',
     voiceError: '❌ Speech recognition error. Please try again.',
     voiceUnsupported: '🎤 Voice input not supported in your browser. Try Chrome.',
+    imageTooLarge: '⚠️ Image too large (max 4MB)',
+    imageReadError: '❌ File read error',
     roleLabels: {
       default: '💬 Default',
       translator: '🌐 Translator',
@@ -70,6 +78,7 @@ const translations = {
     title: '🚀 SaSholom',
     cardTitle: '🧠 Hebrew AI',
     placeholder: 'שאל כל שאלה...',
+    photoPlaceholder: '📷 תמונה הועלתה. שאל שאלה או לחץ "שאל"',
     askBtn: 'שאל 💬',
     clearBtn: '🗑️ נקה צ\'אט',
     welcome: 'שלום! שאל אותי כל דבר 😎',
@@ -82,6 +91,8 @@ const translations = {
     clearConfirm: 'בטוח למחוק את כל ההיסטוריה? 🗑️',
     voiceError: '❌ שגיאת זיהוי דיבור. נסה שוב.',
     voiceUnsupported: '🎤 קלט קולי לא נתמך בדפדפן שלך. נסה Chrome.',
+    imageTooLarge: '⚠️ תמונה גדולה מדי (מקסימום 4MB)',
+    imageReadError: '❌ שגיאת קריאת קובץ',
     roleLabels: {
       default: '💬 רגיל',
       translator: '🌐 מתרגם',
@@ -101,7 +112,11 @@ function applyLanguage(lang) {
   document.title = t.title;
   document.querySelector('h1').textContent = t.title;
   document.querySelector('.card h2').textContent = t.cardTitle;
-  askInput.placeholder = t.placeholder;
+  if (!selectedImageBase64) {
+    askInput.placeholder = t.placeholder;
+  } else {
+    askInput.placeholder = t.photoPlaceholder;
+  }
   askBtn.textContent = t.askBtn;
   clearBtn.textContent = t.clearBtn;
   document.querySelector('footer').innerHTML = t.footer.replace('💚', '<span>💚</span>');
@@ -152,6 +167,46 @@ function setProvider(provider) {
     btn.classList.toggle('active', btn.dataset.provider === provider);
   });
   localStorage.setItem('sasholom_provider', provider);
+}
+
+// ===== ЗАГРУЗКА ФОТО =====
+let selectedImageBase64 = null;
+
+function resetImageState() {
+  selectedImageBase64 = null;
+  askInput.placeholder = translations[currentUILang].placeholder;
+  if (imageBtn) imageBtn.textContent = '📷';
+  if (imageInput) imageInput.value = '';
+}
+
+if (imageInput) {
+  imageInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 4 * 1024 * 1024) {
+      addMessage(translations[currentUILang].imageTooLarge, 'ai');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = () => {
+      selectedImageBase64 = reader.result;
+      askInput.placeholder = translations[currentUILang].photoPlaceholder;
+      if (imageBtn) imageBtn.textContent = '✅';
+      setTimeout(() => { if (imageBtn) imageBtn.textContent = '📷'; }, 2000);
+    };
+    reader.onerror = () => {
+      addMessage(translations[currentUILang].imageReadError, 'ai');
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+if (imageBtn) {
+  imageBtn.addEventListener('click', () => {
+    imageInput.click();
+  });
 }
 
 // ===== РЕНДЕРИНГ MARKDOWN =====
@@ -280,13 +335,20 @@ function addMessage(text, sender, save = true) {
 async function askAI() {
   const t = translations[currentUILang];
   const question = askInput.value.trim();
-  if (!question) return;
-  if (question.length > 2000) {
+  if (!question && !selectedImageBase64) return;
+  if (question && question.length > 2000) {
     addMessage(t.longMsg, 'ai');
     return;
   }
 
-  addMessage(question, 'user');
+  // Сообщение пользователя: показываем либо текст, либо описание с фото
+  if (selectedImageBase64 && !question) {
+    addMessage('📷 Посмотри фото и скажи, какое благословение нужно произнести', 'user');
+  } else if (selectedImageBase64 && question) {
+    addMessage(question + ' (с фото)', 'user');
+  } else {
+    addMessage(question, 'user');
+  }
   askInput.value = '';
 
   const thinking = addMessage(t.thinking, 'ai', false);
@@ -300,15 +362,19 @@ async function askAI() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        question,
+        question: question || undefined,
         history: context,
         systemPrompt: rolePrompts[currentRole],
-        provider: currentProvider
+        provider: currentProvider,
+        image: selectedImageBase64 || undefined
       })
     });
 
     const data = await res.json();
     thinking.remove();
+
+    // Сбрасываем фото после отправки
+    resetImageState();
 
     const answer = data.answer || data.error || '🤷 Извини, что-то пошло не так. Попробуй ещё раз.';
     console.log('✅ Ответ получен, начинаю печать:', answer.slice(0, 30) + '...');
@@ -323,7 +389,7 @@ async function askAI() {
       bubble.setAttribute('data-raw', answer);
       highlightCode(aiMsg);
 
-      context.push({ role: 'user', content: question });
+      context.push({ role: 'user', content: question || '📷 Фото' });
       context.push({ role: 'assistant', content: answer });
       saveContext(context);
       saveHistory();
@@ -332,6 +398,7 @@ async function askAI() {
 
   } catch (err) {
     thinking.remove();
+    resetImageState();
     addMessage(t.serverError, 'ai');
     console.error('🔥 Ошибка:', err);
   } finally {
