@@ -106,7 +106,6 @@ function applyLanguage(lang) {
   clearBtn.textContent = t.clearBtn;
   document.querySelector('footer').innerHTML = t.footer.replace('💚', '<span>💚</span>');
 
-  // Обновляем пресеты по data-role
   document.querySelectorAll('.preset-btn').forEach(btn => {
     const role = btn.dataset.role;
     if (role && t.roleLabels[role]) {
@@ -114,7 +113,6 @@ function applyLanguage(lang) {
     }
   });
 
-  // Кнопки копирования у существующих AI-сообщений
   document.querySelectorAll('.ai-message .copy-btn').forEach(btn => {
     if (btn.textContent === 'Копировать' || btn.textContent === 'Copy' || btn.textContent === 'העתק') {
       btn.textContent = t.copyBtn;
@@ -145,9 +143,8 @@ function setRole(role) {
   localStorage.setItem('sasholom_role', role);
 }
 
-// ===== ВЫБОР ПРОВАЙДЕРА И МОДЕЛИ =====
+// ===== ВЫБОР ПРОВАЙДЕРА =====
 let currentProvider = 'chadgpt';
-let currentModelType = 'fast';
 
 function setProvider(provider) {
   currentProvider = provider;
@@ -155,14 +152,6 @@ function setProvider(provider) {
     btn.classList.toggle('active', btn.dataset.provider === provider);
   });
   localStorage.setItem('sasholom_provider', provider);
-}
-
-function setModelType(type) {
-  currentModelType = type;
-  document.querySelectorAll('.model-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.model === type);
-  });
-  localStorage.setItem('sasholom_model_type', type);
 }
 
 // ===== РЕНДЕРИНГ MARKDOWN =====
@@ -314,8 +303,7 @@ async function askAI() {
         question,
         history: context,
         systemPrompt: rolePrompts[currentRole],
-        provider: currentProvider,
-        modelType: currentModelType
+        provider: currentProvider
       })
     });
 
@@ -495,13 +483,6 @@ document.querySelectorAll('.provider-btn').forEach(btn => {
   });
 });
 
-// Обработчики моделей
-document.querySelectorAll('.model-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    setModelType(btn.dataset.model);
-  });
-});
-
 // ===== ИНИЦИАЛИЗАЦИЯ =====
 const savedTheme = localStorage.getItem('sasholom_theme') || 'dark';
 setTheme(savedTheme);
@@ -514,9 +495,6 @@ applyLanguage(savedUILang);
 
 const savedProvider = localStorage.getItem('sasholom_provider') || 'chadgpt';
 setProvider(savedProvider);
-
-const savedModelType = localStorage.getItem('sasholom_model_type') || 'fast';
-setModelType(savedModelType);
 
 updateLangButton();
 loadHistory();
