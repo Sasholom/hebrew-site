@@ -1,9 +1,14 @@
 // api/ask-deepseek.js
-// Версия с историей диалога и системным промптом (пресеты)
+// Поддержка выбора провайдера: GPT (gpt-5-nano) и Gemini (gemini-3-flash)
 
 const rateLimit = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000;
 const MAX_REQUESTS = 20;
+
+const MODEL_ENDPOINTS = {
+  chadgpt: 'gpt-5-nano',
+  gemini: 'gemini-3-flash'
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -22,13 +27,19 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Слишком много запросов. Подожди минуту 😊' });
   }
 
-  const { question, history, systemPrompt } = req.body;
+  const { question, history, systemPrompt, provider } = req.body;
 
   if (!question || typeof question !== 'string' || question.trim().length === 0) {
     return res.status(400).json({ error: 'Пустой вопрос' });
   }
   if (question.length > 2000) {
     return res.status(400).json({ error: 'Вопрос слишком длинный (макс. 2000 символов)' });
+  }
+
+  const selectedProvider = provider || 'chadgpt';
+  const modelPath = MODEL_ENDPOINTS[selectedProvider];
+  if (!modelPath) {
+    return res.status(400).json({ error: 'Неверный провайдер' });
   }
 
   const apiKey = process.env.CHAD_API_KEY;
@@ -51,7 +62,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://ask.chadgpt.ru/api/public/gpt-5-nano', {
+    const response = await fetch(`https://ask.chadgpt.ru/api/public/${modelPath}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
