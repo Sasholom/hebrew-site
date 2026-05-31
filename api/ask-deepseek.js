@@ -1,5 +1,5 @@
 // api/ask-deepseek.js
-// Использует Chad API public (устаревшая версия) для GPT и Gemini
+// Использует Chad API public для GPT и Gemini
 
 const rateLimit = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000;
@@ -7,14 +7,8 @@ const MAX_REQUESTS = 20;
 
 // Эндпоинты моделей Chad API
 const MODEL_ENDPOINTS = {
-  chadgpt: {
-    fast: 'gpt-5-nano',
-    pro: 'gpt-5.4'
-  },
-  gemini: {
-    fast: 'gemini-3-flash',
-    pro: 'gemini-3.1-pro'
-  }
+  chadgpt: 'gpt-5-nano',
+  gemini: 'gemini-3-flash'
 };
 
 export default async function handler(req, res) {
@@ -34,7 +28,7 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Слишком много запросов. Подожди минуту 😊' });
   }
 
-  const { question, history, systemPrompt, provider, modelType } = req.body;
+  const { question, history, systemPrompt, provider } = req.body;
 
   // Валидация
   if (!question || typeof question !== 'string' || question.trim().length === 0) {
@@ -45,10 +39,9 @@ export default async function handler(req, res) {
   }
 
   const selectedProvider = provider || 'chadgpt';
-  const selectedModelType = modelType || 'fast';
-  const modelPath = MODEL_ENDPOINTS[selectedProvider]?.[selectedModelType];
+  const modelPath = MODEL_ENDPOINTS[selectedProvider];
   if (!modelPath) {
-    return res.status(400).json({ error: 'Неверный провайдер или тип модели' });
+    return res.status(400).json({ error: 'Неверный провайдер' });
   }
 
   // Формируем историю для Chad API
@@ -90,6 +83,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: errorMsg });
     }
   } catch (err) {
-    return res.status(500).json({ error: 'Ошибка соединения с ИИ. Попробуй позже.' });
+    console.error('🔥 Ошибка сервера:', err);
+    return res.status(500).json({ error: 'Ошибка сервера: ' + err.message });
   }
 }
