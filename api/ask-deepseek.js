@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
   const { question, history, systemPrompt, provider, image } = req.body;
 
-  // Валидация: должен быть либо вопрос, либо изображение
+  // Валидация
   if (!question && !image) {
     return res.status(400).json({ error: 'Пустой запрос' });
   }
@@ -81,6 +81,14 @@ export default async function handler(req, res) {
         ...(image && { images: [image] })
       })
     });
+
+    // Проверяем, JSON ли вернулся
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('❌ Не-JSON ответ от Chad API:', text.slice(0, 200));
+      return res.status(502).json({ error: 'Chad API вернул не JSON (возможно, неверный ключ или модель)' });
+    }
 
     const data = await response.json();
 
