@@ -3,116 +3,131 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SaSholom 🚀</title>
-  <!-- ===== SEO МЕТА-ТЕГИ ===== -->
-  <meta name="description" content="SaSholom AI — умный помощник на базе искусственного интеллекта. Задавай вопросы, загружай фото, получай благословения!">
-  <meta name="keywords" content="ИИ, AI, помощник, чат-бот, искусственный интеллект, SaSholom, нейросеть, благословения, браха, фото">
-  <meta name="author" content="Май Бразер">
-  <meta name="robots" content="index, follow">
-  <meta name="language" content="Russian">
+  <title>SaSholom AI</title>
 
-  <!-- ===== OPEN GRAPH ===== -->
+  <!-- ===== SEO ===== -->
+  <meta name="description" content="AI‑портал SaSholom: задавай вопросы, загружай фото, выбирай персонажа">
+  <meta name="keywords" content="AI, чат, иврит, благословения, фото, персонажи">
+  <meta name="author" content="SaSholom">
+  <meta name="robots" content="index, follow">
+
+  <!-- ===== OPEN GRAPH (соцсети) ===== -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sasholomsite.vercel.app/">
-  <meta property="og:title" content="SaSholom AI — твой умный помощник 🤖">
-  <meta property="og:description" content="Задавай вопросы, загружай фото, получай благословения!">
+  <meta property="og:title" content="SaSholom AI — умный помощник с персонажами">
+  <meta property="og:description" content="100+ AI‑персонажей, фото‑благословения, голосовой ввод и многое другое.">
   <meta property="og:image" content="https://sasholomsite.vercel.app/preview.png">
   <meta property="og:locale" content="ru_RU">
 
   <!-- ===== TWITTER CARD ===== -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SaSholom AI — твой умный помощник 🤖">
-  <meta name="twitter:description" content="Задавай вопросы, загружай фото, получай благословения!">
+  <meta name="twitter:title" content="SaSholom AI — умный помощник с персонажами">
+  <meta name="twitter:description" content="100+ AI‑персонажей, фото‑благословения, голосовой ввод.">
   <meta name="twitter:image" content="https://sasholomsite.vercel.app/preview.png">
 
-  <!-- ===== ТЕМА БРАУЗЕРА ===== -->
+  <!-- ===== ТЕМА И PWA ===== -->
   <meta name="theme-color" content="#2a5298">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/favicon.ico">
 
-  <!-- ===== FAVICON ===== -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-
-  <!-- ===== GOOGLE FONTS ===== -->
+  <!-- ===== ШРИФТЫ ===== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
 
-  <!-- ===== PWA MANIFEST ===== -->
-  <link rel="manifest" href="/manifest.json">
-  <meta name="mobile-web-app-capable" content="yes">
-
-  <!-- ===== LUCIDE ICONS ===== -->
+  <!-- ===== БИБЛИОТЕКИ ===== -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- ===== PDF.JS (для чтения PDF) ===== -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <!-- ===== MARKDOWN ===== -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <!-- ===== HIGHLIGHT.JS ===== -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-  <!-- ===== GOOGLE ANALYTICS ===== -->
-<!--<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script>
--->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- ===== КНОПКИ ТЕМЫ И ЯЗЫКА ===== -->
   <button id="theme-toggle" class="theme-toggle" title="Сменить тему">🌓</button>
   <button id="lang-toggle" class="theme-toggle lang-toggle" title="Сменить язык">🌐 RU</button>
+
   <h1>🚀 SaSholom</h1>
 
   <div class="card">
     <h2>🧠 Hebrew AI</h2>
+
+    <!-- ===== ВЫБОР ПРОВАЙДЕРА (GPT / Gemini) ===== -->
     <div class="provider-switcher">
       <button class="provider-btn active" data-provider="chadgpt"><i data-lucide="cpu"></i> GPT</button>
       <button class="provider-btn" data-provider="gemini"><i data-lucide="sparkles"></i> Gemini</button>
     </div>
-    <div class="presets">
-      <button class="preset-btn active" data-role="default"><i data-lucide="message-circle"></i> Обычный</button>
-      <button class="preset-btn" data-role="translator"><i data-lucide="languages"></i> Переводчик</button>
-      <button class="preset-btn" data-role="poet"><i data-lucide="feather"></i> Поэт</button>
-      <button class="preset-btn" data-role="coder"><i data-lucide="code-2"></i> Кодер</button>
+
+    <!-- ===== ВЫБОР ПЕРСОНАЖА (категория + персонаж + обычный режим) ===== -->
+    <div class="character-panel">
+      <div class="character-selectors">
+        <select id="category-select" class="preset-select">
+          <option value="">Все категории</option>
+          <option value="Бизнес и продуктивность">Бизнес</option>
+          <option value="Творчество">Творчество</option>
+          <option value="Технологии и разработка">Разработка</option>
+          <option value="Образование и саморазвитие">Образование</option>
+          <option value="Здоровье и психология">Здоровье</option>
+          <option value="Дом и быт">Дом и быт</option>
+          <option value="Финансы">Финансы</option>
+          <option value="Путешествия">Путешествия</option>
+          <option value="Развлечения и хобби">Хобби</option>
+          <option value="Другое">Другое</option>
+        </select>
+        <select id="character-select" class="preset-select" disabled>
+          <option value="">Выберите персонажа</option>
+        </select>
+      </div>
+      <button class="preset-btn active" id="default-char-btn">💬 Обычный</button>
     </div>
+
+    <!-- ===== ПОЛЕ ВВОДА С ИНСТРУМЕНТАМИ ===== -->
     <div class="input-wrapper">
       <textarea id="ai-question" placeholder="Задай любой вопрос..." maxlength="2000"></textarea>
       <button id="voice-btn" class="icon-btn" title="Голосовой ввод"><i data-lucide="mic"></i></button>
-      <button id="lang-btn" class="icon-btn" title="Сменить язык распознавания">🌐 RU</button>
+      <button id="lang-btn" class="icon-btn" title="Язык распознавания">🌐 RU</button>
       <input type="file" id="image-input" accept="image/*" style="display:none">
       <button id="image-btn" class="icon-btn" title="Загрузить фото"><i data-lucide="image"></i></button>
       <button id="camera-btn" class="icon-btn" title="Сделать снимок"><i data-lucide="camera"></i></button>
       <input type="file" id="file-input" accept=".txt,.pdf" style="display:none">
       <button id="file-btn" class="icon-btn" title="Загрузить файл"><i data-lucide="file-text"></i></button>
     </div>
+
+    <!-- ===== ПРЕВЬЮ ФОТО ===== -->
     <div id="image-preview" class="image-preview" style="display:none">
-      <img id="preview-img" src="" alt="Preview">
+      <img id="preview-img" src="" alt="Превью">
       <button id="remove-preview" class="remove-preview"><i data-lucide="x"></i></button>
     </div>
+
+    <!-- ===== КНОПКИ ОТПРАВКИ И ОЧИСТКИ ===== -->
     <button id="ai-ask-btn">Спросить 💬</button>
-    <button id="clear-chat-btn">🗑️ Очистить чат</button>
+    <button id="clear-chat-btn">🗑️ Очистить</button>
+
+    <!-- ===== ИНСТРУМЕНТЫ ЧАТА (экспорт, поиск, счётчик, заметки) ===== -->
     <div class="chat-tools">
       <button id="export-btn" class="tool-btn"><i data-lucide="download"></i> Экспорт</button>
       <input type="text" id="search-input" class="search-input" placeholder="Поиск...">
       <span id="counter" class="counter">Запросов: 0</span>
       <button id="notes-btn" class="tool-btn"><i data-lucide="notepad-text"></i> Заметки</button>
     </div>
+
+    <!-- ===== ПАНЕЛЬ ЗАМЕТОК (имя, предпочтения) ===== -->
     <div id="notes-panel" class="notes-panel" style="display:none">
       <label>Имя: <input type="text" id="note-name"></label>
       <label>Предпочтения: <textarea id="note-prefs" rows="2"></textarea></label>
       <button id="save-notes-btn">Сохранить</button>
     </div>
+
+    <!-- ===== ИСТОРИЯ ЧАТА ===== -->
     <div id="chat-history">
       <div class="message ai-message">
         <span class="avatar">🧠</span>
-        <div class="bubble">Привет! Задай мне любой вопрос 😎</div>
+        <div class="bubble">Привет! Выбери персонажа или просто спроси 😎</div>
         <div class="msg-actions">
-          <button class="copy-btn" title="Скопировать"><i data-lucide="clipboard"></i></button>
+          <button class="copy-btn" title="Копировать"><i data-lucide="clipboard"></i></button>
           <button class="share-btn" title="Поделиться"><i data-lucide="share-2"></i></button>
           <button class="speak-btn" title="Озвучить"><i data-lucide="volume-2"></i></button>
         </div>
@@ -120,18 +135,17 @@
     </div>
   </div>
 
-  <footer>
-    Made with <span>💚</span> by S.K.
-  </footer>
+  <!-- ===== ФУТЕР ===== -->
+  <footer>Made with <span>💚</span> by S.K.</footer>
 
+  <!-- ===== ОСНОВНОЙ СКРИПТ ===== -->
   <script src="script.js"></script>
-  <!-- ===== PWA SERVICE WORKER ===== -->
+
+  <!-- ===== SERVICE WORKER (PWA) ===== -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
-          console.log('SW registered:', reg.scope);
-        }).catch(err => console.log('SW failed:', err));
+        navigator.serviceWorker.register('/sw.js');
       });
     }
   </script>
