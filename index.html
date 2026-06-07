@@ -5,27 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SaSholom 🚀</title>
   <!-- ===== SEO МЕТА-ТЕГИ ===== -->
-  <meta name="description" content="SaSholom AI — умный помощник на базе искусственного интеллекта. Задавай вопросы, получай ответы, веди диалог с ИИ! 🚀">
-  <meta name="keywords" content="ИИ, AI, помощник, чат-бот, искусственный интеллект, SaSholom, нейросеть">
+  <meta name="description" content="SaSholom AI — умный помощник на базе искусственного интеллекта. Задавай вопросы, загружай фото, получай благословения!">
+  <meta name="keywords" content="ИИ, AI, помощник, чат-бот, искусственный интеллект, SaSholom, нейросеть, благословения, браха, фото">
   <meta name="author" content="Май Бразер">
   <meta name="robots" content="index, follow">
   <meta name="language" content="Russian">
 
-  <!-- ===== OPEN GRAPH (для Telegram, WhatsApp, VK, Facebook) ===== -->
+  <!-- ===== OPEN GRAPH ===== -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sasholomsite.vercel.app/">
   <meta property="og:title" content="SaSholom AI — твой умный помощник 🤖">
-  <meta property="og:description" content="Задавай вопросы ИИ, веди диалог, получай умные ответы! Память, история, всё что нужно 🚀">
+  <meta property="og:description" content="Задавай вопросы, загружай фото, получай благословения!">
   <meta property="og:image" content="https://sasholomsite.vercel.app/preview.png">
   <meta property="og:locale" content="ru_RU">
 
   <!-- ===== TWITTER CARD ===== -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SaSholom AI — твой умный помощник 🤖">
-  <meta name="twitter:description" content="Задавай вопросы ИИ, веди диалог, получай умные ответы! 🚀">
+  <meta name="twitter:description" content="Задавай вопросы, загружай фото, получай благословения!">
   <meta name="twitter:image" content="https://sasholomsite.vercel.app/preview.png">
 
-  <!-- ===== ТЕМА БРАУЗЕРА (мобилки) ===== -->
+  <!-- ===== ТЕМА БРАУЗЕРА ===== -->
   <meta name="theme-color" content="#2a5298">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -38,41 +38,84 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
 
+  <!-- ===== PWA MANIFEST ===== -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- ===== LUCIDE ICONS ===== -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- ===== PDF.JS (для чтения PDF) ===== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- ===== MARKDOWN ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- ===== HIGHLIGHT.JS ===== -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- ===== GOOGLE ANALYTICS ===== -->
+<!--<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+-->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button id="lang-toggle" class="theme-toggle lang-toggle" title="Сменить язык">🌐 RU</button>
   <button id="theme-toggle" class="theme-toggle" title="Сменить тему">🌓</button>
-
+  <button id="lang-toggle" class="theme-toggle lang-toggle" title="Сменить язык">🌐 RU</button>
   <h1>🚀 SaSholom</h1>
 
   <div class="card">
-    <h2>🧠мы уже работаем над ошибкой</h2>
+    <h2>🧠 Hebrew AI</h2>
     <div class="provider-switcher">
-      <button class="provider-btn active" data-provider="chadgpt">🤖 GPT</button>
-      <button class="provider-btn" data-provider="gemini">🌌 Gemini</button>
+      <button class="provider-btn active" data-provider="chadgpt"><i data-lucide="cpu"></i> GPT</button>
+      <button class="provider-btn" data-provider="gemini"><i data-lucide="sparkles"></i> Gemini</button>
     </div>
-    
     <div class="presets">
-      <button class="preset-btn active" data-role="default">💬 Обычный</button>
-      <button class="preset-btn" data-role="translator">🌐 Переводчик</button>
-      <button class="preset-btn" data-role="poet">🎭 Поэт</button>
-      <button class="preset-btn" data-role="coder">💻 Кодер</button>
+      <button class="preset-btn active" data-role="default"><i data-lucide="message-circle"></i> Обычный</button>
+      <button class="preset-btn" data-role="translator"><i data-lucide="languages"></i> Переводчик</button>
+      <button class="preset-btn" data-role="poet"><i data-lucide="feather"></i> Поэт</button>
+      <button class="preset-btn" data-role="coder"><i data-lucide="code-2"></i> Кодер</button>
     </div>
     <div class="input-wrapper">
       <textarea id="ai-question" placeholder="Задай любой вопрос..." maxlength="2000"></textarea>
-      <button id="voice-btn" class="voice-btn" title="Голосовой ввод">🎤</button>
-      <button id="lang-btn" class="lang-btn" title="Сменить язык">🌐 RU</button>
+      <button id="voice-btn" class="icon-btn" title="Голосовой ввод"><i data-lucide="mic"></i></button>
+      <button id="lang-btn" class="icon-btn" title="Сменить язык распознавания">🌐 RU</button>
       <input type="file" id="image-input" accept="image/*" style="display:none">
-      <button id="image-btn" class="voice-btn" title="Загрузить фото">📷</button>
+      <button id="image-btn" class="icon-btn" title="Загрузить фото"><i data-lucide="image"></i></button>
+      <button id="camera-btn" class="icon-btn" title="Сделать снимок"><i data-lucide="camera"></i></button>
+      <input type="file" id="file-input" accept=".txt,.pdf" style="display:none">
+      <button id="file-btn" class="icon-btn" title="Загрузить файл"><i data-lucide="file-text"></i></button>
     </div>
-<!--    
-    <button id="ai-ask-btn">Спросить 💬</button> 
+    <div id="image-preview" class="image-preview" style="display:none">
+      <img id="preview-img" src="" alt="Preview">
+      <button id="remove-preview" class="remove-preview"><i data-lucide="x"></i></button>
+    </div>
+    <button id="ai-ask-btn">Спросить 💬</button>
     <button id="clear-chat-btn">🗑️ Очистить чат</button>
+    <div class="chat-tools">
+      <button id="export-btn" class="tool-btn"><i data-lucide="download"></i> Экспорт</button>
+      <input type="text" id="search-input" class="search-input" placeholder="Поиск...">
+      <span id="counter" class="counter">Запросов: 0</span>
+      <button id="notes-btn" class="tool-btn"><i data-lucide="notepad-text"></i> Заметки</button>
+    </div>
+    <div id="notes-panel" class="notes-panel" style="display:none">
+      <label>Имя: <input type="text" id="note-name"></label>
+      <label>Предпочтения: <textarea id="note-prefs" rows="2"></textarea></label>
+      <button id="save-notes-btn">Сохранить</button>
+    </div>
     <div id="chat-history">
       <div class="message ai-message">
         <span class="avatar">🧠</span>
         <div class="bubble">Привет! Задай мне любой вопрос 😎</div>
+        <div class="msg-actions">
+          <button class="copy-btn" title="Скопировать"><i data-lucide="clipboard"></i></button>
+          <button class="share-btn" title="Поделиться"><i data-lucide="share-2"></i></button>
+          <button class="speak-btn" title="Озвучить"><i data-lucide="volume-2"></i></button>
+        </div>
       </div>
     </div>
   </div>
@@ -80,8 +123,17 @@
   <footer>
     Made with <span>💚</span> by S.K.
   </footer>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+
   <script src="script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- ===== PWA SERVICE WORKER ===== -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('SW registered:', reg.scope);
+        }).catch(err => console.log('SW failed:', err));
+      });
+    }
+  </script>
 </body>
 </html>
