@@ -9,13 +9,13 @@
 //   чтобы у пользователей обновился кэш.
 // ============================================================
 
-const CACHE_NAME = 'sasholom-v3';
+const CACHE_NAME = 'sasholom-v5';
 
 const PRECACHE = [
   '/',
   '/index.html',
-  '/style.css',
-  '/script.js',
+  '/style.css?v=2',
+  '/script.js?v=2',
   '/manifest.json',
   '/favicon.ico',
   '/icon-192.png',

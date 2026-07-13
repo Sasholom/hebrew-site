@@ -426,6 +426,9 @@ const translations = {
     exportBtn: 'Экспорт',
     searchPlaceholder: 'Поиск...',
     counterLabel: 'Запросов',
+    menuModel: 'Модель',
+    menuCategory: 'Категория персонажей',
+    menuChat: 'Чат и данные',
     notesBtn: 'Заметки',
     notesName: 'Имя:',
     notesPrefs: 'Предпочтения:',
@@ -477,6 +480,9 @@ const translations = {
     exportBtn: 'Export',
     searchPlaceholder: 'Search...',
     counterLabel: 'Requests',
+    menuModel: 'Model',
+    menuCategory: 'Character category',
+    menuChat: 'Chat & data',
     notesBtn: 'Notes',
     notesName: 'Name:',
     notesPrefs: 'Preferences:',
@@ -527,6 +533,9 @@ const translations = {
     exportBtn: 'ייצוא',
     searchPlaceholder: 'חיפוש...',
     counterLabel: 'בקשות',
+    menuModel: 'מודל',
+    menuCategory: 'קטגוריית דמויות',
+    menuChat: 'צ׳אט ונתונים',
     notesBtn: 'הערות',
     notesName: 'שם:',
     notesPrefs: 'העדפות:',
@@ -1121,6 +1130,7 @@ async function askAI() {
     : question;
   addMessage(userText, 'user');
   el.askInput.value = '';
+  el.askInput.style.height = ''; // сброс автовысоты поля
 
   // Индикатор «Думаю...» (не сохраняется в историю)
   const thinking = addMessage(t('thinking'), 'ai', false);
@@ -1281,7 +1291,18 @@ el.askInput.addEventListener('keydown', (e) => {
     askAI();
   }
 });
+// Автовысота поля ввода (растёт с текстом до 200px)
+el.askInput.addEventListener('input', () => {
+  el.askInput.style.height = 'auto';
+  el.askInput.style.height = Math.min(el.askInput.scrollHeight, 200) + 'px';
+});
 el.clearBtn.addEventListener('click', clearChat);
+
+// Закрытие меню настроек по клику вне его
+document.addEventListener('click', (e) => {
+  const menu = document.querySelector('details.menu');
+  if (menu && menu.open && !menu.contains(e.target)) menu.open = false;
+});
 
 el.themeToggle.addEventListener('click', toggleTheme);
 el.langToggle.addEventListener('click', () => {
