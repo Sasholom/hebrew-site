@@ -29,13 +29,14 @@
   <meta name="theme-color" content="#2a5298">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/icon-192.png">
 
   <!-- ===== ШРИФТЫ ===== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
 
-  <!-- ===== БИБЛИОТЕКИ ===== -->
+  <!-- ===== БИБЛИОТЕКИ (CDN) ===== -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -47,13 +48,13 @@
 <body>
 
   <!-- ===== КНОПКИ ТЕМЫ И ЯЗЫКА ===== -->
-  <button id="theme-toggle" class="theme-toggle" title="Сменить тему">🌓</button>
-  <button id="lang-toggle" class="theme-toggle lang-toggle" title="Сменить язык">🌐 RU</button>
+  <button id="theme-toggle" class="theme-toggle" data-i18n-title="themeTitle">🌓</button>
+  <button id="lang-toggle" class="theme-toggle lang-toggle" data-i18n-title="langTitle">🌐 RU</button>
 
-  <h1>🚀 SaSholom</h1>
+  <h1 data-i18n="title">🚀 SaSholom</h1>
 
   <div class="card">
-    <h2>🧠 Hebrew AI</h2>
+    <h2 data-i18n="cardTitle">🧠 Hebrew AI</h2>
 
     <!-- ===== ВЫБОР ПРОВАЙДЕРА (GPT / Gemini) ===== -->
     <div class="provider-switcher">
@@ -61,39 +62,25 @@
       <button class="provider-btn" data-provider="gemini"><i data-lucide="sparkles"></i> Gemini</button>
     </div>
 
-    <!-- ===== ВЫБОР ПЕРСОНАЖА (категория + персонаж + обычный режим) ===== -->
+    <!-- ===== ВЫБОР ПЕРСОНАЖА (опции наполняет js/main.js) ===== -->
     <div class="character-panel">
       <div class="character-selectors">
-        <select id="category-select" class="preset-select">
-          <option value="">Все категории</option>
-          <option value="Бизнес и продуктивность">Бизнес</option>
-          <option value="Творчество">Творчество</option>
-          <option value="Технологии и разработка">Разработка</option>
-          <option value="Образование и саморазвитие">Образование</option>
-          <option value="Здоровье и психология">Здоровье</option>
-          <option value="Дом и быт">Дом и быт</option>
-          <option value="Финансы">Финансы</option>
-          <option value="Путешествия">Путешествия</option>
-          <option value="Развлечения и хобби">Хобби</option>
-          <option value="Другое">Другое</option>
-        </select>
-        <select id="character-select" class="preset-select" disabled>
-          <option value="">Выберите персонажа</option>
-        </select>
+        <select id="category-select" class="preset-select"></select>
+        <select id="character-select" class="preset-select"></select>
       </div>
-      <button class="preset-btn active" id="default-char-btn">💬 Обычный</button>
+      <button class="preset-btn active" id="default-char-btn" data-i18n="defaultMode">💬 Обычный</button>
     </div>
 
     <!-- ===== ПОЛЕ ВВОДА С ИНСТРУМЕНТАМИ ===== -->
     <div class="input-wrapper">
-      <textarea id="ai-question" placeholder="Задай любой вопрос..." maxlength="2000"></textarea>
-      <button id="voice-btn" class="icon-btn" title="Голосовой ввод"><i data-lucide="mic"></i></button>
-      <button id="lang-btn" class="icon-btn" title="Язык распознавания">🌐 RU</button>
+      <textarea id="ai-question" data-i18n-placeholder="placeholder" placeholder="Задай любой вопрос..." maxlength="2000"></textarea>
+      <button id="voice-btn" class="icon-btn" data-i18n-title="voiceTitle"><i data-lucide="mic"></i></button>
+      <button id="lang-btn" class="icon-btn" data-i18n-title="voiceLangTitle">🇷🇺 RU</button>
       <input type="file" id="image-input" accept="image/*" style="display:none">
-      <button id="image-btn" class="icon-btn" title="Загрузить фото"><i data-lucide="image"></i></button>
-      <button id="camera-btn" class="icon-btn" title="Сделать снимок"><i data-lucide="camera"></i></button>
+      <button id="image-btn" class="icon-btn" data-i18n-title="imageTitle"><i data-lucide="image"></i></button>
+      <button id="camera-btn" class="icon-btn" data-i18n-title="cameraTitle"><i data-lucide="camera"></i></button>
       <input type="file" id="file-input" accept=".txt,.pdf" style="display:none">
-      <button id="file-btn" class="icon-btn" title="Загрузить файл"><i data-lucide="file-text"></i></button>
+      <button id="file-btn" class="icon-btn" data-i18n-title="fileTitle"><i data-lucide="file-text"></i></button>
     </div>
 
     <!-- ===== ПРЕВЬЮ ФОТО ===== -->
@@ -103,42 +90,34 @@
     </div>
 
     <!-- ===== КНОПКИ ОТПРАВКИ И ОЧИСТКИ ===== -->
-    <button id="ai-ask-btn">Спросить 💬</button>
-    <button id="clear-chat-btn">🗑️ Очистить</button>
+    <button id="ai-ask-btn" data-i18n="askBtn">Спросить 💬</button>
+    <button id="clear-chat-btn" data-i18n="clearBtn">🗑️ Очистить</button>
 
     <!-- ===== ИНСТРУМЕНТЫ ЧАТА (экспорт, поиск, счётчик, заметки) ===== -->
     <div class="chat-tools">
-      <button id="export-btn" class="tool-btn"><i data-lucide="download"></i> Экспорт</button>
-      <input type="text" id="search-input" class="search-input" placeholder="Поиск...">
-      <span id="counter" class="counter">Запросов: 0</span>
-      <button id="notes-btn" class="tool-btn"><i data-lucide="notepad-text"></i> Заметки</button>
+      <button id="export-btn" class="tool-btn"><i data-lucide="download"></i> <span data-i18n="exportBtn">Экспорт</span></button>
+      <input type="text" id="search-input" class="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск...">
+      <span id="counter" class="counter">0</span>
+      <button id="notes-btn" class="tool-btn"><i data-lucide="notepad-text"></i> <span data-i18n="notesBtn">Заметки</span></button>
     </div>
 
     <!-- ===== ПАНЕЛЬ ЗАМЕТОК (имя, предпочтения) ===== -->
     <div id="notes-panel" class="notes-panel" style="display:none">
-      <label>Имя: <input type="text" id="note-name"></label>
-      <label>Предпочтения: <textarea id="note-prefs" rows="2"></textarea></label>
-      <button id="save-notes-btn">Сохранить</button>
+      <label><span data-i18n="notesName">Имя:</span> <input type="text" id="note-name"></label>
+      <label><span data-i18n="notesPrefs">Предпочтения:</span> <textarea id="note-prefs" rows="2"></textarea></label>
+      <button id="save-notes-btn" data-i18n="notesSave">Сохранить</button>
     </div>
 
-    <!-- ===== ИСТОРИЯ ЧАТА ===== -->
-    <div id="chat-history">
-      <div class="message ai-message">
-        <span class="avatar">🧠</span>
-        <div class="bubble">Привет! Выбери персонажа или просто спроси 😎</div>
-        <div class="msg-actions">
-          <button class="copy-btn" title="Копировать"><i data-lucide="clipboard"></i></button>
-          <button class="share-btn" title="Поделиться"><i data-lucide="share-2"></i></button>
-          <button class="speak-btn" title="Озвучить"><i data-lucide="volume-2"></i></button>
-        </div>
-      </div>
-    </div>
+    <!-- ===== ИСТОРИЯ ЧАТА (сообщения добавляет js/chat.js) ===== -->
+    <div id="chat-history"></div>
   </div>
 
   <!-- ===== ФУТЕР ===== -->
   <footer>Made with <span>💚</span> by S.K.</footer>
 
   <!-- ===== ОСНОВНОЙ СКРИПТ ===== -->
+  <!-- Обычный скрипт (не module): работает и при открытии файла
+       двойным кликом (file://), и на сервере/Vercel. -->
   <script src="script.js"></script>
 
   <!-- ===== SERVICE WORKER (PWA) ===== -->

@@ -1,3 +1,11 @@
 {
-  "type": "module"
+  "name": "sasholom-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SaSholom AI — AI-портал со 100 экспертными персонажами (vanilla JS + Vercel serverless)",
+  "scripts": {
+    "dev": "vercel dev",
+    "serve": "python3 -m http.server 8080"
+  }
 }

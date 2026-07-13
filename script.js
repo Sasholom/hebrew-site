@@ -1,123 +1,218 @@
 // ============================================================
-//   DOM‑ЭЛЕМЕНТЫ
+//   SaSholom AI — единый клиентский скрипт
+//   Обычный (не module) скрипт: работает и при открытии
+//   index.html двойным кликом (file://), и на сервере/Vercel.
+//
+//   Собран из модулей в js/ (оставлены как читаемый исходник).
+//   Порядок секций = порядок зависимостей.
 // ============================================================
-const askBtn = document.getElementById('ai-ask-btn');
-const askInput = document.getElementById('ai-question');
-const chatHistory = document.getElementById('chat-history');
-const clearBtn = document.getElementById('clear-chat-btn');
-const themeToggle = document.getElementById('theme-toggle');
-const langToggle = document.getElementById('lang-toggle');
-const voiceBtn = document.getElementById('voice-btn');
-const langBtn = document.getElementById('lang-btn');
-const imageBtn = document.getElementById('image-btn');
-const imageInput = document.getElementById('image-input');
-const cameraBtn = document.getElementById('camera-btn');
-const fileInput = document.getElementById('file-input');
-const fileBtn = document.getElementById('file-btn');
-const exportBtn = document.getElementById('export-btn');
-const searchInput = document.getElementById('search-input');
-const counterSpan = document.getElementById('counter');
-const notesBtn = document.getElementById('notes-btn');
-const notesPanel = document.getElementById('notes-panel');
-const noteName = document.getElementById('note-name');
-const notePrefs = document.getElementById('note-prefs');
-const saveNotesBtn = document.getElementById('save-notes-btn');
-const previewDiv = document.getElementById('image-preview');
-const previewImg = document.getElementById('preview-img');
-const removePreviewBtn = document.getElementById('remove-preview');
-const categorySelect = document.getElementById('category-select');
-const characterSelect = document.getElementById('character-select');
-const defaultCharBtn = document.getElementById('default-char-btn');
+(function () {
+  'use strict';
 
+// ====================== js/config.js ======================
 // ============================================================
-//   КЛЮЧИ LOCALSTORAGE
+//   КОНСТАНТЫ И КЛЮЧИ ХРАНИЛИЩА
+//   Единственное место, где заданы лимиты и имена ключей
+//   localStorage — при изменении здесь меняется везде.
 // ============================================================
-const STORAGE_KEY = 'sasholom_chat_history';
-const CONTEXT_KEY = 'sasholom_context';
-const UI_LANG_KEY = 'sasholom_ui_lang';
-const NOTES_KEY = 'sasholom_notes';
-const QUERY_COUNT_KEY = 'sasholom_query_count';
-const CHARACTER_KEY = 'sasholom_character';
 
-// ============================================================
-//   ГЛОБАЛЬНОЕ СОСТОЯНИЕ
-// ============================================================
-let currentUILang = 'ru';
-let currentRole = 'default';
-let currentProvider = 'chadgpt';
-let selectedImageBase64 = null;
-let isListening = false;
-let recognition = null;
-let queryCount = parseInt(localStorage.getItem(QUERY_COUNT_KEY) || '0');
-let currentCharacter = null; // null = обычный режим
+const API_URL = '/api/chat';
 
-// ============================================================
-//   ПЕРЕВОДЫ ИНТЕРФЕЙСА
-// ============================================================
-const translations = {
-  ru: {
-    title: '🚀 SaSholom', cardTitle: '🧠 Hebrew AI',
-    placeholder: 'Задай любой вопрос...', photoPlaceholder: '📷 Фото загружено...',
-    askBtn: 'Спросить 💬', clearBtn: '🗑️ Очистить чат',
-    welcome: 'Привет! Выбери персонажа или просто спроси 😎',
-    thinking: 'Думаю...', copyBtn: 'Копировать', copied: 'Скопировано ✓',
-    error: 'Ошибка', longMsg: '⚠️ Сообщение слишком длинное (макс. 2000 символов)',
-    serverError: '❌ Не могу соединиться с сервером. Проверь интернет и попробуй снова.',
-    clearConfirm: 'Точно удалить всю историю чата? 🗑️',
-    voiceError: '❌ Ошибка распознавания речи. Попробуй ещё раз.',
-    voiceUnsupported: '🎤 Голосовой ввод не поддерживается в твоём браузере. Попробуй Chrome.',
-    imageTooLarge: '⚠️ Фото слишком большое (макс 4MB)', imageReadError: '❌ Ошибка чтения файла',
-    footer: 'Made with 💚 by S.K.'
-  },
-  en: {
-    title: '🚀 SaSholom', cardTitle: '🧠 Hebrew AI',
-    placeholder: 'Ask any question...', photoPlaceholder: '📷 Photo uploaded...',
-    askBtn: 'Ask 💬', clearBtn: '🗑️ Clear chat',
-    welcome: 'Hello! Choose a character or just ask 😎',
-    thinking: 'Thinking...', copyBtn: 'Copy', copied: 'Copied ✓',
-    error: 'Error', longMsg: '⚠️ Message too long (max 2000 chars)',
-    serverError: '❌ Cannot connect to server. Check internet and try again.',
-    clearConfirm: 'Really delete entire chat history? 🗑️',
-    voiceError: '❌ Speech recognition error. Please try again.',
-    voiceUnsupported: '🎤 Voice input not supported in your browser. Try Chrome.',
-    imageTooLarge: '⚠️ Image too large (max 4MB)', imageReadError: '❌ File read error',
-    footer: 'Made with 💚 by S.K.'
-  },
-  he: {
-    title: '🚀 SaSholom', cardTitle: '🧠 Hebrew AI',
-    placeholder: 'שאל כל שאלה...', photoPlaceholder: '📷 תמונה הועלתה...',
-    askBtn: 'שאל 💬', clearBtn: '🗑️ נקה צ\'אט',
-    welcome: 'שלום! בחר דמות או פשוט שאל 😎',
-    thinking: 'חושב...', copyBtn: 'העתק', copied: 'הועתק ✓',
-    error: 'שגיאה', longMsg: '⚠️ הודעה ארוכה מדי (מקסימום 2000 תווים)',
-    serverError: '❌ לא ניתן להתחבר לשרת. בדוק את החיבור ונסה שוב.',
-    clearConfirm: 'בטוח למחוק את כל ההיסטוריה? 🗑️',
-    voiceError: '❌ שגיאת זיהוי דיבור. נסה שוב.',
-    voiceUnsupported: '🎤 קלט קולי לא נתמך בדפדפן שלך. נסה Chrome.',
-    imageTooLarge: '⚠️ תמונה גדולה מדי (מקסימום 4MB)', imageReadError: '❌ שגיאת קריאת קובץ',
-    footer: 'Made with 💚 by S.K.'
-  }
+const STORAGE_KEYS = {
+  history: 'sasholom_chat_history',
+  context: 'sasholom_context',
+  uiLang: 'sasholom_ui_lang',
+  notes: 'sasholom_notes',
+  queryCount: 'sasholom_query_count',
+  character: 'sasholom_character',
+  provider: 'sasholom_provider',
+  theme: 'sasholom_theme',
 };
 
-function applyLanguage(lang) {
-  currentUILang = lang;
-  const t = translations[lang];
-  document.title = t.title;
-  document.querySelector('h1').textContent = t.title;
-  document.querySelector('.card h2').textContent = t.cardTitle;
-  if (!selectedImageBase64) askInput.placeholder = t.placeholder;
-  else askInput.placeholder = t.photoPlaceholder;
-  askBtn.textContent = t.askBtn;
-  clearBtn.textContent = t.clearBtn;
-  document.querySelector('footer').innerHTML = t.footer.replace('💚', '<span>💚</span>');
-  const langLabels = { ru: '🇷🇺 RU', en: '🇺🇸 EN', he: '🇮🇱 HE' };
-  if (langToggle) langToggle.textContent = langLabels[lang];
-  localStorage.setItem(UI_LANG_KEY, lang);
-  refreshIcons();
+// Максимальная длина вопроса (символов) — синхронизировано
+// с валидацией на сервере (api/chat.js) и maxlength в textarea.
+const MAX_QUESTION_LENGTH = 2000;
+
+// Максимальный размер загружаемого фото до сжатия (байт).
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
+// Сколько последних сообщений передаётся модели как контекст.
+const CONTEXT_MESSAGES = 10;
+
+// Скорость «печати» ответа, мс на слово.
+const TYPEWRITER_SPEED = 30;
+
+// Параметры сжатия фото перед отправкой.
+const IMAGE_COMPRESSION = {
+  maxWidth: 800,
+  maxHeight: 800,
+  quality: 0.7,
+};
+
+// ====================== js/state.js ======================
+// ============================================================
+//   ОБЩЕЕ СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+//   Один изменяемый объект, который импортируют все модули.
+//   Поля меняются напрямую: state.provider = 'gemini'.
+// ============================================================
+
+const state = {
+  // Язык интерфейса: 'ru' | 'en' | 'he'
+  uiLang: 'ru',
+
+  // Выбранный AI-провайдер: 'chadgpt' (GPT) | 'gemini'
+  provider: 'chadgpt',
+
+  // Текущий персонаж (объект из characters.js) или null — обычный режим
+  character: null,
+
+  // base64 выбранного фото (после сжатия) или null
+  selectedImage: null,
+
+  // Счётчик отправленных запросов (персистится в localStorage)
+  queryCount: 0,
+
+  // Идёт ли сейчас распознавание речи
+  isListening: false,
+};
+
+// ====================== js/dom.js ======================
+// ============================================================
+//   ССЫЛКИ НА DOM-ЭЛЕМЕНТЫ
+//   Все getElementById собраны здесь, чтобы остальные модули
+//   не искали элементы по всему документу.
+// ============================================================
+
+const byId = (id) => document.getElementById(id);
+
+const el = {
+  // Основной ввод и кнопки
+  askBtn: byId('ai-ask-btn'),
+  askInput: byId('ai-question'),
+  chatHistory: byId('chat-history'),
+  clearBtn: byId('clear-chat-btn'),
+
+  // Переключатели темы и языка интерфейса
+  themeToggle: byId('theme-toggle'),
+  langToggle: byId('lang-toggle'),
+
+  // Голосовой ввод
+  voiceBtn: byId('voice-btn'),
+  voiceLangBtn: byId('lang-btn'),
+
+  // Фото и камера
+  imageBtn: byId('image-btn'),
+  imageInput: byId('image-input'),
+  cameraBtn: byId('camera-btn'),
+  previewDiv: byId('image-preview'),
+  previewImg: byId('preview-img'),
+  removePreviewBtn: byId('remove-preview'),
+
+  // Файлы (PDF/TXT)
+  fileBtn: byId('file-btn'),
+  fileInput: byId('file-input'),
+
+  // Инструменты чата
+  exportBtn: byId('export-btn'),
+  searchInput: byId('search-input'),
+  counterSpan: byId('counter'),
+
+  // Заметки о пользователе
+  notesBtn: byId('notes-btn'),
+  notesPanel: byId('notes-panel'),
+  noteName: byId('note-name'),
+  notePrefs: byId('note-prefs'),
+  saveNotesBtn: byId('save-notes-btn'),
+
+  // Выбор персонажа
+  categorySelect: byId('category-select'),
+  characterSelect: byId('character-select'),
+  defaultCharBtn: byId('default-char-btn'),
+};
+
+// Перерисовать иконки Lucide (нужно после любой вставки <i data-lucide>).
+function refreshIcons() {
+  if (window.lucide) window.lucide.createIcons();
 }
 
+// ====================== js/storage.js ======================
 // ============================================================
-//   БИБЛИОТЕКА ПЕРСОНАЖЕЙ (100 штук)
+//   РАБОТА С localStorage
+//   Все чтения/записи хранилища — только через этот модуль.
+//   История чата — [{ text, sender }], контекст — [{ role, content }].
+// ============================================================
+
+
+function readJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+// --- История чата (для отображения) ---
+
+function getSavedHistory() {
+  return readJSON(STORAGE_KEYS.history, []);
+}
+
+function saveHistoryData(messages) {
+  localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(messages));
+}
+
+function clearHistoryData() {
+  localStorage.removeItem(STORAGE_KEYS.history);
+  localStorage.removeItem(STORAGE_KEYS.context);
+}
+
+// --- Контекст диалога (передаётся модели) ---
+
+function getContext() {
+  return readJSON(STORAGE_KEYS.context, []);
+}
+
+function saveContext(context) {
+  localStorage.setItem(STORAGE_KEYS.context, JSON.stringify(context.slice(-CONTEXT_MESSAGES)));
+}
+
+// --- Заметки о пользователе ---
+
+function getNotes() {
+  return readJSON(STORAGE_KEYS.notes, {});
+}
+
+function saveNotes(notes) {
+  localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(notes));
+}
+
+// --- Счётчик запросов ---
+
+function getQueryCount() {
+  return parseInt(localStorage.getItem(STORAGE_KEYS.queryCount) || '0', 10);
+}
+
+function saveQueryCount(count) {
+  localStorage.setItem(STORAGE_KEYS.queryCount, String(count));
+}
+
+// --- Простые настройки ---
+
+function getSetting(key, fallback) {
+  return localStorage.getItem(STORAGE_KEYS[key]) || fallback;
+}
+
+function saveSetting(key, value) {
+  localStorage.setItem(STORAGE_KEYS[key], value);
+}
+
+// ====================== js/characters.js ======================
+// ============================================================
+//   БИБЛИОТЕКА ПЕРСОНАЖЕЙ (101 эксперт, сгруппированы по категориям)
+//   Чтобы добавить персонажа — добавь объект в массив ниже.
+//   Поля: name (имя в списке), category (одна из существующих
+//   или новая), prompt (системный промпт для AI), description.
 // ============================================================
 const characters = [
   // Бизнес и продуктивность
@@ -241,62 +336,659 @@ const characters = [
   { name: "Weird Idea Lab", category: "Другое", prompt: "Ты — безумный лабораторный гений. Скрещивай несочетаемое для генерации странных идей.", description: "Ассистент для креативных идей." }
 ];
 
-// ============================================================
-//   ЛОГИКА ВЫБОРА ПЕРСОНАЖА
-// ============================================================
-function updateCharacterList() {
-  const category = categorySelect.value;
-  characterSelect.innerHTML = '<option value="">Выберите персонажа</option>';
-  const filtered = category ? characters.filter(c => c.category === category) : characters;
-  filtered.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.name;
-    opt.textContent = c.name;
-    characterSelect.appendChild(opt);
-  });
-  characterSelect.disabled = false;
+// Список категорий выводится из данных автоматически —
+// новая категория появится в селекте сама.
+const categories = [...new Set(characters.map((c) => c.category))];
+
+function findCharacter(name) {
+  return characters.find((c) => c.name === name) || null;
 }
 
-function selectCharacter(name) {
-  currentCharacter = characters.find(c => c.name === name) || null;
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  if (!currentCharacter && defaultCharBtn) {
-    defaultCharBtn.classList.add('active');
+// ====================== js/api.js ======================
+// ============================================================
+//   ЗАПРОСЫ К СЕРВЕРУ
+//   Единственная точка общения с бэкендом (api/chat.js).
+// ============================================================
+
+
+/**
+ * Отправить вопрос AI.
+ * @param {Object} payload
+ * @param {string} [payload.question]      Текст вопроса
+ * @param {Array}  [payload.history]       Контекст [{ role, content }]
+ * @param {string} [payload.systemPrompt]  Системный промпт персонажа
+ * @param {string} [payload.provider]      'chadgpt' | 'gemini'
+ * @param {string} [payload.image]         base64 фото (data URL)
+ * @returns {Promise<{answer?: string, error?: string}>}
+ * @throws при сетевой ошибке (нет соединения, сервер недоступен)
+ */
+async function askServer(payload) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+// ====================== js/i18n.js ======================
+// ============================================================
+//   ЛОКАЛИЗАЦИЯ (русский / English / עברית)
+//
+//   Как это работает:
+//   - Статичные тексты в index.html помечены атрибутами
+//     data-i18n / data-i18n-placeholder / data-i18n-title —
+//     applyLanguage() проставляет их автоматически.
+//   - Динамические тексты берутся через t('ключ').
+//   - Для иврита включается направление письма RTL.
+//
+//   Чтобы добавить язык: добавь объект в translations,
+//   код языка в LANGS и подпись в LANG_LABELS.
+// ============================================================
+
+
+const LANGS = ['ru', 'en', 'he'];
+
+const LANG_LABELS = { ru: '🇷🇺 RU', en: '🇺🇸 EN', he: '🇮🇱 HE' };
+
+// Язык озвучки ответов (SpeechSynthesis) для каждого языка интерфейса.
+const SPEECH_LANGS = { ru: 'ru-RU', en: 'en-US', he: 'he-IL' };
+
+const translations = {
+  ru: {
+    title: '🚀 SaSholom',
+    cardTitle: '🧠 Hebrew AI',
+    placeholder: 'Задай любой вопрос...',
+    photoPlaceholder: '📷 Фото загружено. Можно добавить вопрос...',
+    askBtn: 'Спросить 💬',
+    clearBtn: '🗑️ Очистить',
+    welcome: 'Привет! Выбери персонажа или просто спроси 😎',
+    thinking: 'Думаю...',
+    longMsg: '⚠️ Сообщение слишком длинное (макс. 2000 символов)',
+    serverError: '❌ Не могу соединиться с сервером. Проверь интернет и попробуй снова.',
+    clearConfirm: 'Точно удалить всю историю чата? 🗑️',
+    voiceError: '❌ Ошибка распознавания речи. Попробуй ещё раз.',
+    voiceUnsupported: '🎤 Голосовой ввод не поддерживается в твоём браузере. Попробуй Chrome.',
+    imageTooLarge: '⚠️ Фото слишком большое (макс. 10MB)',
+    imageReadError: '❌ Ошибка чтения файла',
+    photoQuestion: '📷 Что изображено на этом фото?',
+    withPhoto: ' (с фото)',
+    cameraShoot: 'Снять',
+    cameraClose: 'Закрыть',
+    cameraError: '❌ Нет доступа к камере',
+    pdfLoaded: '📄 Текст из PDF загружен в поле ввода (первые 2000 символов)',
+    fileUnsupported: '⚠️ Поддерживаются только файлы PDF и TXT',
+    shareUnsupported: 'Поделиться доступно на мобильных устройствах. Используй кнопку копирования 😉',
+    notesSaved: 'Заметки сохранены! ✓',
+    allCategories: 'Все категории',
+    choosePersona: 'Выберите персонажа',
+    defaultMode: '💬 Обычный',
+    exportBtn: 'Экспорт',
+    searchPlaceholder: 'Поиск...',
+    counterLabel: 'Запросов',
+    notesBtn: 'Заметки',
+    notesName: 'Имя:',
+    notesPrefs: 'Предпочтения:',
+    notesSave: 'Сохранить',
+    exportYou: 'Вы',
+    exportAI: 'AI',
+    copyTitle: 'Копировать',
+    shareTitle: 'Поделиться',
+    speakTitle: 'Озвучить',
+    voiceTitle: 'Голосовой ввод',
+    voiceLangTitle: 'Язык распознавания речи',
+    imageTitle: 'Загрузить фото',
+    cameraTitle: 'Сделать снимок',
+    fileTitle: 'Загрузить файл (PDF/TXT)',
+    themeTitle: 'Сменить тему',
+    langTitle: 'Сменить язык',
+    // Инструкция модели: на каком языке отвечать
+    replyLangHint: 'Отвечай на том языке, на котором пишет пользователь.',
+  },
+
+  en: {
+    title: '🚀 SaSholom',
+    cardTitle: '🧠 Hebrew AI',
+    placeholder: 'Ask any question...',
+    photoPlaceholder: '📷 Photo uploaded. You can add a question...',
+    askBtn: 'Ask 💬',
+    clearBtn: '🗑️ Clear',
+    welcome: 'Hello! Choose a character or just ask 😎',
+    thinking: 'Thinking...',
+    longMsg: '⚠️ Message too long (max 2000 characters)',
+    serverError: '❌ Cannot connect to the server. Check your internet and try again.',
+    clearConfirm: 'Really delete the entire chat history? 🗑️',
+    voiceError: '❌ Speech recognition error. Please try again.',
+    voiceUnsupported: '🎤 Voice input is not supported in your browser. Try Chrome.',
+    imageTooLarge: '⚠️ Image too large (max 10MB)',
+    imageReadError: '❌ File read error',
+    photoQuestion: '📷 What is in this photo?',
+    withPhoto: ' (with photo)',
+    cameraShoot: 'Capture',
+    cameraClose: 'Close',
+    cameraError: '❌ No camera access',
+    pdfLoaded: '📄 PDF text loaded into the input field (first 2000 characters)',
+    fileUnsupported: '⚠️ Only PDF and TXT files are supported',
+    shareUnsupported: 'Sharing is available on mobile devices. Use the copy button instead 😉',
+    notesSaved: 'Notes saved! ✓',
+    allCategories: 'All categories',
+    choosePersona: 'Choose a character',
+    defaultMode: '💬 Default',
+    exportBtn: 'Export',
+    searchPlaceholder: 'Search...',
+    counterLabel: 'Requests',
+    notesBtn: 'Notes',
+    notesName: 'Name:',
+    notesPrefs: 'Preferences:',
+    notesSave: 'Save',
+    exportYou: 'You',
+    exportAI: 'AI',
+    copyTitle: 'Copy',
+    shareTitle: 'Share',
+    speakTitle: 'Read aloud',
+    voiceTitle: 'Voice input',
+    voiceLangTitle: 'Speech recognition language',
+    imageTitle: 'Upload photo',
+    cameraTitle: 'Take a photo',
+    fileTitle: 'Upload file (PDF/TXT)',
+    themeTitle: 'Switch theme',
+    langTitle: 'Switch language',
+    replyLangHint: 'Reply in the language the user writes in.',
+  },
+
+  he: {
+    title: '🚀 SaSholom',
+    cardTitle: '🧠 Hebrew AI',
+    placeholder: 'שאל כל שאלה...',
+    photoPlaceholder: '📷 התמונה הועלתה. אפשר להוסיף שאלה...',
+    askBtn: 'שאל 💬',
+    clearBtn: '🗑️ נקה',
+    welcome: 'שלום! בחר דמות או פשוט שאל 😎',
+    thinking: 'חושב...',
+    longMsg: '⚠️ ההודעה ארוכה מדי (מקסימום 2000 תווים)',
+    serverError: '❌ לא ניתן להתחבר לשרת. בדוק את החיבור ונסה שוב.',
+    clearConfirm: 'בטוח למחוק את כל ההיסטוריה? 🗑️',
+    voiceError: '❌ שגיאת זיהוי דיבור. נסה שוב.',
+    voiceUnsupported: '🎤 קלט קולי לא נתמך בדפדפן שלך. נסה Chrome.',
+    imageTooLarge: '⚠️ התמונה גדולה מדי (מקסימום 10MB)',
+    imageReadError: '❌ שגיאת קריאת קובץ',
+    photoQuestion: '📷 מה מופיע בתמונה הזו?',
+    withPhoto: ' (עם תמונה)',
+    cameraShoot: 'צלם',
+    cameraClose: 'סגור',
+    cameraError: '❌ אין גישה למצלמה',
+    pdfLoaded: '📄 הטקסט מה-PDF נטען לשדה הקלט (2000 התווים הראשונים)',
+    fileUnsupported: '⚠️ נתמכים רק קבצי PDF ו-TXT',
+    shareUnsupported: 'שיתוף זמין במכשירים ניידים. השתמש בכפתור ההעתקה 😉',
+    notesSaved: 'ההערות נשמרו! ✓',
+    allCategories: 'כל הקטגוריות',
+    choosePersona: 'בחר דמות',
+    defaultMode: '💬 רגיל',
+    exportBtn: 'ייצוא',
+    searchPlaceholder: 'חיפוש...',
+    counterLabel: 'בקשות',
+    notesBtn: 'הערות',
+    notesName: 'שם:',
+    notesPrefs: 'העדפות:',
+    notesSave: 'שמור',
+    exportYou: 'אתה',
+    exportAI: 'AI',
+    copyTitle: 'העתק',
+    shareTitle: 'שתף',
+    speakTitle: 'הקרא',
+    voiceTitle: 'קלט קולי',
+    voiceLangTitle: 'שפת זיהוי דיבור',
+    imageTitle: 'העלה תמונה',
+    cameraTitle: 'צלם תמונה',
+    fileTitle: 'העלה קובץ (PDF/TXT)',
+    themeTitle: 'החלף ערכת נושא',
+    langTitle: 'החלף שפה',
+    replyLangHint: 'ענה בשפה שבה כותב המשתמש.',
+  },
+};
+
+// Отображаемые названия категорий персонажей.
+// Ключи — категории из characters.js (данные хранятся на русском).
+const categoryNames = {
+  ru: null, // null = показывать как есть
+  en: {
+    'Бизнес и продуктивность': 'Business & Productivity',
+    'Творчество': 'Creativity',
+    'Технологии и разработка': 'Tech & Development',
+    'Образование и саморазвитие': 'Education & Self-Growth',
+    'Здоровье и психология': 'Health & Psychology',
+    'Дом и быт': 'Home & Everyday Life',
+    'Финансы': 'Finance',
+    'Путешествия': 'Travel',
+    'Развлечения и хобби': 'Fun & Hobbies',
+    'Другое': 'Other',
+  },
+  he: {
+    'Бизнес и продуктивность': 'עסקים ופרודוקטיביות',
+    'Творчество': 'יצירתיות',
+    'Технологии и разработка': 'טכנולוגיה ופיתוח',
+    'Образование и саморазвитие': 'חינוך והתפתחות אישית',
+    'Здоровье и психология': 'בריאות ופסיכולוגיה',
+    'Дом и быт': 'בית ויומיום',
+    'Финансы': 'כספים',
+    'Путешествия': 'טיולים',
+    'Развлечения и хобби': 'בילוי ותחביבים',
+    'Другое': 'אחר',
+  },
+};
+
+// Перевод по ключу для текущего языка.
+function t(key) {
+  return translations[state.uiLang]?.[key] ?? translations.ru[key] ?? key;
+}
+
+// Отображаемое имя категории для текущего языка.
+function categoryName(category) {
+  return categoryNames[state.uiLang]?.[category] ?? category;
+}
+
+// Применить язык ко всем статичным элементам страницы.
+// Динамические списки (категории, счётчик) обновляет вызывающая
+// сторона — см. setLanguage() в main.js.
+function applyLanguage(lang) {
+  state.uiLang = lang;
+  const dict = translations[lang];
+
+  document.title = dict.title;
+  document.documentElement.lang = lang;
+  // Для иврита — направление письма справа налево
+  document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+
+  document.querySelectorAll('[data-i18n]').forEach((node) => {
+    if (dict[node.dataset.i18n] != null) node.textContent = dict[node.dataset.i18n];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((node) => {
+    if (dict[node.dataset.i18nPlaceholder] != null) node.placeholder = dict[node.dataset.i18nPlaceholder];
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach((node) => {
+    if (dict[node.dataset.i18nTitle] != null) node.title = dict[node.dataset.i18nTitle];
+  });
+
+  // Плейсхолдер зависит от того, прикреплено ли фото
+  el.askInput.placeholder = state.selectedImage ? dict.photoPlaceholder : dict.placeholder;
+  el.langToggle.textContent = LANG_LABELS[lang];
+
+  saveSetting('uiLang', lang);
+}
+
+// ====================== js/voice.js ======================
+// ============================================================
+//   ГОЛОС: распознавание речи (ввод) и озвучка (вывод)
+//   Используются браузерные Web Speech API и SpeechSynthesis —
+//   внешних сервисов нет.
+// ============================================================
+
+
+// Языки распознавания переключаются кнопкой 🌐 рядом с микрофоном
+// независимо от языка интерфейса.
+const VOICE_LANGS = [
+  { code: 'ru-RU', label: '🇷🇺 RU' },
+  { code: 'en-US', label: '🇺🇸 EN' },
+  { code: 'he-IL', label: '🇮🇱 HE' },
+];
+
+let currentVoiceLang = 0;
+let recognition = null;
+let handlers = {};
+
+/**
+ * Инициализация распознавания речи.
+ * @param {Object} callbacks
+ * @param {(text: string) => void} callbacks.onTranscript  Распознанный текст
+ * @param {() => void} callbacks.onError        Ошибка распознавания
+ * @param {() => void} callbacks.onUnsupported  Браузер не поддерживает API
+ */
+function initVoice(callbacks) {
+  handlers = callbacks;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  recognition = new SpeechRecognition();
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    stopListening();
+    handlers.onTranscript?.(transcript);
+  };
+  recognition.onerror = () => {
+    stopListening();
+    handlers.onError?.();
+  };
+  recognition.onend = stopListening;
+
+  updateVoiceLangButton();
+}
+
+function toggleListening() {
+  state.isListening ? stopListening() : startListening();
+}
+
+function startListening() {
+  if (!recognition) {
+    handlers.onUnsupported?.();
+    return;
   }
-  localStorage.setItem(CHARACTER_KEY, name || 'default');
+  recognition.lang = VOICE_LANGS[currentVoiceLang].code;
+  recognition.start();
+  state.isListening = true;
+  el.voiceBtn.classList.add('listening');
+  el.voiceBtn.innerHTML = '<i data-lucide="mic-off"></i>';
+  refreshIcons();
 }
 
-if (defaultCharBtn) {
-  defaultCharBtn.addEventListener('click', () => {
-    selectCharacter(null);
-    characterSelect.value = '';
+function stopListening() {
+  state.isListening = false;
+  el.voiceBtn.classList.remove('listening');
+  el.voiceBtn.innerHTML = '<i data-lucide="mic"></i>';
+  if (recognition) recognition.stop();
+  refreshIcons();
+}
+
+// Переключить язык распознавания по кругу (RU → EN → HE).
+function switchVoiceLang() {
+  currentVoiceLang = (currentVoiceLang + 1) % VOICE_LANGS.length;
+  updateVoiceLangButton();
+  if (state.isListening) {
+    stopListening();
+    startListening();
+  }
+}
+
+function updateVoiceLangButton() {
+  el.voiceLangBtn.textContent = VOICE_LANGS[currentVoiceLang].label;
+}
+
+// Озвучить текст голосом, соответствующим языку интерфейса.
+function speak(text) {
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = SPEECH_LANGS[state.uiLang] || 'ru-RU';
+  speechSynthesis.speak(utterance);
+}
+
+// ====================== js/chat.js ======================
+// ============================================================
+//   ЧАТ: рендер сообщений, markdown, эффект печати,
+//   история, экспорт и поиск.
+// ============================================================
+
+
+// --- Markdown и подсветка кода (marked + highlight.js с CDN) ---
+
+function renderMarkdown(text) {
+  if (typeof marked === 'undefined') return text;
+  return marked.parse(text, { breaks: true, html: false });
+}
+
+function highlightCode(element) {
+  if (typeof hljs === 'undefined') return;
+  element.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+}
+
+// --- Добавление сообщения в чат ---
+
+/**
+ * Добавить сообщение в ленту.
+ * @param {string} text    Текст (для AI — markdown)
+ * @param {'user'|'ai'} sender
+ * @param {boolean} save   Сохранять ли историю после добавления
+ * @returns {HTMLElement}  Созданный элемент сообщения
+ */
+function addMessage(text, sender, save = true) {
+  const message = document.createElement('div');
+  message.className = `message ${sender}-message`;
+
+  const avatar = document.createElement('span');
+  avatar.className = 'avatar';
+  avatar.textContent = sender === 'user' ? '👤' : '🧠';
+  message.appendChild(avatar);
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  // Ответы AI рендерим как markdown; сообщения пользователя — только
+  // как текст (textContent), чтобы исключить XSS
+  if (sender === 'ai') bubble.innerHTML = renderMarkdown(text);
+  else bubble.textContent = text;
+  bubble.setAttribute('data-raw', text);
+  message.appendChild(bubble);
+
+  if (sender === 'ai') {
+    message.appendChild(buildMessageActions(bubble));
+  }
+
+  el.chatHistory.appendChild(message);
+  if (sender === 'ai') highlightCode(message);
+  el.chatHistory.scrollTop = el.chatHistory.scrollHeight;
+  if (save) saveHistory();
+  refreshIcons();
+  return message;
+}
+
+// Кнопки под ответом AI: копировать, поделиться, озвучить.
+function buildMessageActions(bubble) {
+  const actions = document.createElement('div');
+  actions.className = 'msg-actions';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.title = t('copyTitle');
+  copyBtn.innerHTML = '<i data-lucide="clipboard"></i>';
+  copyBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const raw = bubble.getAttribute('data-raw') || '';
+    try {
+      await navigator.clipboard.writeText(raw);
+      flashIcon(copyBtn, 'check', 'clipboard');
+    } catch {
+      flashIcon(copyBtn, 'x', 'clipboard');
+    }
+  });
+  actions.appendChild(copyBtn);
+
+  const shareBtn = document.createElement('button');
+  shareBtn.title = t('shareTitle');
+  shareBtn.innerHTML = '<i data-lucide="share-2"></i>';
+  shareBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const raw = bubble.getAttribute('data-raw') || '';
+    if (navigator.share) {
+      try { await navigator.share({ text: raw }); } catch { /* пользователь отменил */ }
+    } else {
+      addMessage(t('shareUnsupported'), 'ai');
+    }
+  });
+  actions.appendChild(shareBtn);
+
+  const speakBtn = document.createElement('button');
+  speakBtn.title = t('speakTitle');
+  speakBtn.innerHTML = '<i data-lucide="volume-2"></i>';
+  speakBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    speak(bubble.getAttribute('data-raw') || '');
+  });
+  actions.appendChild(speakBtn);
+
+  return actions;
+}
+
+// Кратко показать иконку результата (галочку/крестик) и вернуть исходную.
+function flashIcon(btn, tempIcon, normalIcon) {
+  btn.innerHTML = `<i data-lucide="${tempIcon}"></i>`;
+  refreshIcons();
+  setTimeout(() => {
+    btn.innerHTML = `<i data-lucide="${normalIcon}"></i>`;
+    refreshIcons();
+  }, 2000);
+}
+
+// --- Эффект печати ---
+
+/**
+ * «Печатает» текст по словам, затем вызывает onComplete.
+ * Пока идёт печать, показывается сырой текст; после завершения
+ * вызывающая сторона обычно заменяет его на rendered markdown.
+ */
+function typewriterEffect(bubble, fullText, onComplete) {
+  const words = fullText.split(/(\s+)/);
+  let i = 0;
+  bubble.textContent = '';
+  (function typeNext() {
+    if (i < words.length) {
+      bubble.textContent += words[i];
+      i++;
+      el.chatHistory.scrollTop = el.chatHistory.scrollHeight;
+      setTimeout(typeNext, TYPEWRITER_SPEED);
+    } else {
+      onComplete?.();
+    }
+  })();
+}
+
+// --- История ---
+
+// Восстановить историю из localStorage. Возвращает true, если что-то было.
+function loadHistory() {
+  const saved = getSavedHistory();
+  if (!saved.length) return false;
+  el.chatHistory.innerHTML = '';
+  saved.forEach((msg) => addMessage(msg.text, msg.sender, false));
+  return true;
+}
+
+// Сохранить текущую ленту (кроме индикатора «Думаю...»).
+function saveHistory() {
+  const messages = [];
+  el.chatHistory.querySelectorAll('.message').forEach((m) => {
+    if (m.classList.contains('thinking')) return;
+    const isUser = m.classList.contains('user-message');
+    const rawText = m.querySelector('.bubble').getAttribute('data-raw') || '';
+    messages.push({ text: rawText, sender: isUser ? 'user' : 'ai' });
+  });
+  saveHistoryData(messages);
+}
+
+// --- Экспорт диалога в .txt ---
+
+function exportHistory() {
+  const lines = [];
+  el.chatHistory.querySelectorAll('.message').forEach((m) => {
+    const isUser = m.classList.contains('user-message');
+    const text = m.querySelector('.bubble').innerText;
+    lines.push(`${isUser ? t('exportYou') : t('exportAI')}: ${text}`);
+  });
+  const blob = new Blob([lines.join('\n\n')], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sasholom-chat-${new Date().toISOString().slice(0, 10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// --- Поиск по истории ---
+
+function filterMessages(term) {
+  const query = term.toLowerCase();
+  el.chatHistory.querySelectorAll('.message').forEach((msg) => {
+    const text = msg.querySelector('.bubble').innerText.toLowerCase();
+    msg.style.display = text.includes(query) ? 'flex' : 'none';
   });
 }
 
+// ====================== js/media.js ======================
 // ============================================================
-//   ИКОНКИ LUCIDE
+//   МЕДИА: загрузка фото, камера, файлы (PDF/TXT)
+//   Фото сжимается на клиенте (canvas → JPEG) и отправляется
+//   на сервер как base64 — там его обрабатывает vision-модель.
 // ============================================================
-function refreshIcons() {
-  if (window.lucide) lucide.createIcons();
+
+
+// pdf.js по умолчанию требует указать воркер, иначе парсит
+// в основном потоке с предупреждением в консоли.
+if (window.pdfjsLib) {
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
-// ============================================================
-//   СЖАТИЕ ИЗОБРАЖЕНИЙ
-// ============================================================
-function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
+// Подключить все обработчики. Вызывается один раз из main.js.
+function initMedia() {
+  el.imageBtn.addEventListener('click', () => el.imageInput.click());
+  el.imageInput.addEventListener('change', onImageSelected);
+  el.removePreviewBtn.addEventListener('click', resetImageState);
+  el.cameraBtn.addEventListener('click', openCamera);
+  el.fileBtn.addEventListener('click', () => el.fileInput.click());
+  el.fileInput.addEventListener('change', onFileSelected);
+}
+
+// Сбросить прикреплённое фото (после отправки или по крестику).
+function resetImageState() {
+  state.selectedImage = null;
+  el.askInput.placeholder = t('placeholder');
+  el.imageBtn.innerHTML = '<i data-lucide="image"></i>';
+  el.imageInput.value = '';
+  el.previewDiv.style.display = 'none';
+  refreshIcons();
+}
+
+// --- Загрузка фото из галереи ---
+
+async function onImageSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > MAX_IMAGE_SIZE) {
+    addMessage(t('imageTooLarge'), 'ai');
+    return;
+  }
+  try {
+    const compressed = await compressImage(file);
+    attachImage(compressed);
+    flashImageBtn();
+  } catch {
+    addMessage(t('imageReadError'), 'ai');
+  }
+  refreshIcons();
+}
+
+// Показать превью и запомнить фото до отправки.
+function attachImage(dataUrl) {
+  state.selectedImage = dataUrl;
+  el.previewImg.src = dataUrl;
+  el.previewDiv.style.display = 'block';
+  el.askInput.placeholder = t('photoPlaceholder');
+}
+
+function flashImageBtn() {
+  el.imageBtn.innerHTML = '<i data-lucide="check"></i>';
+  refreshIcons();
+  setTimeout(() => {
+    el.imageBtn.innerHTML = '<i data-lucide="image"></i>';
+    refreshIcons();
+  }, 2000);
+}
+
+// Сжать изображение до заданных размеров, вернуть JPEG data URL.
+function compressImage(file) {
+  const { maxWidth, maxHeight, quality } = IMAGE_COMPRESSION;
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        let width = img.width, height = img.height;
+        let { width, height } = img;
         if (width > maxWidth || height > maxHeight) {
           const ratio = Math.min(maxWidth / width, maxHeight / height);
           width = Math.round(width * ratio);
           height = Math.round(height * ratio);
         }
         const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
+        canvas.width = width;
+        canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', quality));
       };
@@ -308,505 +1000,361 @@ function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
   });
 }
 
-function resetImageState() {
-  selectedImageBase64 = null;
-  askInput.placeholder = translations[currentUILang].placeholder;
-  if (imageBtn) imageBtn.innerHTML = '<i data-lucide="image"></i>';
-  if (imageInput) imageInput.value = '';
-  if (previewDiv) previewDiv.style.display = 'none';
+// --- Камера ---
+
+async function openCamera() {
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+  } catch {
+    addMessage(t('cameraError'), 'ai');
+    return;
+  }
+
+  const modal = document.createElement('div');
+  modal.className = 'camera-modal';
+  modal.innerHTML = `
+    <video id="cam-video" autoplay playsinline></video>
+    <div class="camera-controls">
+      <button id="capture-btn" class="tool-btn"><i data-lucide="camera"></i> ${t('cameraShoot')}</button>
+      <button id="close-cam" class="tool-btn"><i data-lucide="x"></i> ${t('cameraClose')}</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const video = modal.querySelector('#cam-video');
+  video.srcObject = stream;
+
+  const closeCamera = () => {
+    stream.getTracks().forEach((track) => track.stop());
+    modal.remove();
+  };
+
+  modal.querySelector('#capture-btn').onclick = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    attachImage(canvas.toDataURL('image/jpeg', IMAGE_COMPRESSION.quality));
+    closeCamera();
+  };
+  modal.querySelector('#close-cam').onclick = closeCamera;
+
   refreshIcons();
 }
 
-// ============================================================
-//   ЗАГРУЗКА ФОТО
-// ============================================================
-if (imageInput) {
-  imageInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      addMessage(translations[currentUILang].imageTooLarge, 'ai');
-      return;
-    }
-    try {
-      const compressed = await compressImage(file);
-      selectedImageBase64 = compressed;
-      previewImg.src = compressed;
-      previewDiv.style.display = 'block';
-      askInput.placeholder = translations[currentUILang].photoPlaceholder;
-      if (imageBtn) imageBtn.innerHTML = '<i data-lucide="check"></i>';
-      setTimeout(() => { if (imageBtn) imageBtn.innerHTML = '<i data-lucide="image"></i>'; refreshIcons(); }, 2000);
-    } catch (err) {
-      addMessage(translations[currentUILang].imageReadError, 'ai');
-    }
-    refreshIcons();
-  });
-}
+// --- Файлы: PDF и TXT ---
+// Текст файла вставляется в поле ввода (обрезается до лимита вопроса),
+// дальше пользователь отправляет его как обычное сообщение.
 
-if (imageBtn) {
-  imageBtn.addEventListener('click', () => imageInput.click());
-}
-
-if (removePreviewBtn) {
-  removePreviewBtn.addEventListener('click', () => {
-    selectedImageBase64 = null;
-    previewDiv.style.display = 'none';
-    imageInput.value = '';
-    askInput.placeholder = translations[currentUILang].placeholder;
-  });
-}
-
-// ============================================================
-//   КАМЕРА
-// ============================================================
-cameraBtn.addEventListener('click', async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    const modal = document.createElement('div');
-    modal.className = 'camera-modal';
-    modal.innerHTML = `
-      <video id="cam-video" autoplay style="width:100%;max-width:400px;border-radius:10px;"></video>
-      <div style="display:flex;gap:10px;justify-content:center;margin-top:10px;">
-        <button id="capture-btn" class="tool-btn"><i data-lucide="camera"></i> Снять</button>
-        <button id="close-cam" class="tool-btn"><i data-lucide="x"></i> Закрыть</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    const video = document.getElementById('cam-video');
-    video.srcObject = stream;
-    document.getElementById('capture-btn').onclick = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      selectedImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
-      previewImg.src = selectedImageBase64;
-      previewDiv.style.display = 'block';
-      askInput.placeholder = translations[currentUILang].photoPlaceholder;
-      stream.getTracks().forEach(t => t.stop());
-      modal.remove();
-    };
-    document.getElementById('close-cam').onclick = () => {
-      stream.getTracks().forEach(t => t.stop());
-      modal.remove();
-    };
-    lucide.createIcons();
-  } catch (err) {
-    addMessage('Нет доступа к камере', 'ai');
-  }
-});
-
-// ============================================================
-//   ЗАГРУЗКА ФАЙЛОВ (PDF/TXT)
-// ============================================================
-fileBtn.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', async (e) => {
+async function onFileSelected(e) {
   const file = e.target.files[0];
   if (!file) return;
 
   if (file.type === 'application/pdf') {
     const reader = new FileReader();
     reader.onload = async (ev) => {
-      const typedarray = new Uint8Array(ev.target.result);
-      const pdf = await pdfjsLib.getDocument(typedarray).promise;
-      let text = '';
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        text += content.items.map(item => item.str).join(' ') + '\n';
+      try {
+        const typedarray = new Uint8Array(ev.target.result);
+        const pdf = await window.pdfjsLib.getDocument(typedarray).promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map((item) => item.str).join(' ') + '\n';
+        }
+        el.askInput.value = text.substring(0, MAX_QUESTION_LENGTH);
+        addMessage(t('pdfLoaded'), 'ai');
+      } catch {
+        addMessage(t('imageReadError'), 'ai');
       }
-      askInput.value = text.substring(0, 2000);
-      addMessage(`📄 Текст из PDF загружен (первые 2000 символов)`, 'ai');
     };
     reader.readAsArrayBuffer(file);
   } else if (file.type === 'text/plain') {
     const reader = new FileReader();
     reader.onload = (ev) => {
-      askInput.value = ev.target.result.substring(0, 2000);
+      el.askInput.value = ev.target.result.substring(0, MAX_QUESTION_LENGTH);
     };
     reader.readAsText(file);
+  } else {
+    addMessage(t('fileUnsupported'), 'ai');
   }
-});
-
-// ============================================================
-//   ЭКСПОРТ ИСТОРИИ
-// ============================================================
-exportBtn.addEventListener('click', () => {
-  const messages = [];
-  chatHistory.querySelectorAll('.message').forEach(m => {
-    const isUser = m.classList.contains('user-message');
-    const text = m.querySelector('.bubble').innerText;
-    messages.push((isUser ? 'Вы' : 'AI') + ': ' + text);
-  });
-  const blob = new Blob([messages.join('\n\n')], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'sasholom-chat.txt';
-  a.click();
-});
-
-// ============================================================
-//   ПОИСК ПО ИСТОРИИ
-// ============================================================
-searchInput.addEventListener('input', (e) => {
-  const term = e.target.value.toLowerCase();
-  document.querySelectorAll('.message').forEach(msg => {
-    const text = msg.querySelector('.bubble').innerText.toLowerCase();
-    msg.style.display = text.includes(term) ? 'flex' : 'none';
-  });
-});
-
-// ============================================================
-//   ЗАМЕТКИ
-// ============================================================
-notesBtn.addEventListener('click', () => {
-  notesPanel.style.display = notesPanel.style.display === 'none' ? 'block' : 'none';
-});
-
-saveNotesBtn.addEventListener('click', () => {
-  const notes = { name: noteName.value, prefs: notePrefs.value };
-  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-  notesPanel.style.display = 'none';
-  addMessage('Заметки сохранены!', 'ai');
-});
-
-const savedNotes = JSON.parse(localStorage.getItem(NOTES_KEY) || '{}');
-if (noteName) noteName.value = savedNotes.name || '';
-if (notePrefs) notePrefs.value = savedNotes.prefs || '';
-
-function getNotesPrompt() {
-  const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '{}');
-  if (notes.name || notes.prefs) {
-    return `[Информация о пользователе] Имя: ${notes.name || 'неизвестно'}. Предпочтения: ${notes.prefs || 'нет'}.`;
-  }
-  return '';
+  el.fileInput.value = '';
 }
 
+// ====================== js/main.js ======================
 // ============================================================
-//   MARKDOWN И ПОДСВЕТКА
+//   ТОЧКА ВХОДА
+//   Связывает модули: инициализация, обработчики событий
+//   и главный сценарий «вопрос → ответ» (askAI).
+//
+//   Карта модулей:
+//   config.js     — константы и ключи хранилища
+//   state.js      — общее состояние
+//   dom.js        — ссылки на элементы
+//   i18n.js       — переводы (ru/en/he)
+//   characters.js — библиотека из 100 персонажей
+//   storage.js    — localStorage
+//   api.js        — запрос к серверу
+//   chat.js       — рендер сообщений, история, экспорт, поиск
+//   media.js      — фото, камера, PDF/TXT
+//   voice.js      — распознавание речи и озвучка
 // ============================================================
-function renderMarkdown(text) {
-  if (typeof marked === 'undefined') return text;
-  return marked.parse(text, { breaks: true, html: false });
-}
-function highlightCode(element) {
-  if (typeof hljs === 'undefined') return;
-  element.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
-}
+
 
 // ============================================================
-//   ЭФФЕКТ ПЕЧАТИ
+//   ГЛАВНЫЙ СЦЕНАРИЙ: ОТПРАВКА ВОПРОСА
 // ============================================================
-function typewriterEffect(bubble, fullText, speed = 30, onComplete) {
-  const words = fullText.split(/(\s+)/);
-  let i = 0;
-  bubble.textContent = '';
-  function typeNext() {
-    if (i < words.length) {
-      bubble.textContent += words[i];
-      i++;
-      chatHistory.scrollTop = chatHistory.scrollHeight;
-      setTimeout(typeNext, speed);
-    } else if (onComplete) onComplete();
-  }
-  typeNext();
-}
 
-// ============================================================
-//   ИСТОРИЯ И КОНТЕКСТ
-// ============================================================
-function loadHistory() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    chatHistory.innerHTML = '';
-    JSON.parse(saved).forEach(msg => addMessage(msg.text, msg.sender, false));
-  }
-}
-function saveHistory() {
-  const messages = [];
-  chatHistory.querySelectorAll('.message').forEach(m => {
-    if (m.classList.contains('thinking')) return;
-    const isUser = m.classList.contains('user-message');
-    const rawText = m.querySelector('.bubble').getAttribute('data-raw') || '';
-    messages.push({ text: rawText, sender: isUser ? 'user' : 'ai' });
-  });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-}
-function getContext() {
-  const saved = localStorage.getItem(CONTEXT_KEY);
-  return saved ? JSON.parse(saved) : [];
-}
-function saveContext(context) {
-  localStorage.setItem(CONTEXT_KEY, JSON.stringify(context.slice(-10)));
-}
-
-// ============================================================
-//   ДОБАВЛЕНИЕ СООБЩЕНИЯ
-// ============================================================
-function addMessage(text, sender, save = true) {
-  const t = translations[currentUILang];
-  const message = document.createElement('div');
-  message.className = `message ${sender}-message`;
-  const avatar = sender === 'user' ? '👤' : '🧠';
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  if (sender === 'ai') bubble.innerHTML = renderMarkdown(text);
-  else bubble.textContent = text;
-  bubble.setAttribute('data-raw', text);
-
-  message.innerHTML = '';
-  message.appendChild(document.createElement('span')).className = 'avatar';
-  message.querySelector('.avatar').textContent = avatar;
-  message.appendChild(bubble);
-
-  const actions = document.createElement('div');
-  actions.className = 'msg-actions';
-
-  if (sender === 'ai') {
-    const copyBtn = document.createElement('button');
-    copyBtn.innerHTML = '<i data-lucide="clipboard"></i>';
-    copyBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const raw = bubble.getAttribute('data-raw') || '';
-      try {
-        await navigator.clipboard.writeText(raw);
-        copyBtn.innerHTML = '<i data-lucide="check"></i>';
-        setTimeout(() => { copyBtn.innerHTML = '<i data-lucide="clipboard"></i>'; refreshIcons(); }, 2000);
-        refreshIcons();
-      } catch (err) {
-        copyBtn.innerHTML = '<i data-lucide="x"></i>';
-        setTimeout(() => { copyBtn.innerHTML = '<i data-lucide="clipboard"></i>'; refreshIcons(); }, 2000);
-      }
-    });
-    actions.appendChild(copyBtn);
-
-    const shareBtn = document.createElement('button');
-    shareBtn.innerHTML = '<i data-lucide="share-2"></i>';
-    shareBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      if (navigator.share) {
-        try { await navigator.share({ text }); } catch (err) {}
-      } else {
-        addMessage('Поделиться можно только на мобильных устройствах или через копирование ссылки.', 'ai');
-      }
-    });
-    actions.appendChild(shareBtn);
-
-    const speakBtn = document.createElement('button');
-    speakBtn.innerHTML = '<i data-lucide="volume-2"></i>';
-    speakBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ru-RU';
-      speechSynthesis.speak(utterance);
-    });
-    actions.appendChild(speakBtn);
-  }
-  message.appendChild(actions);
-  chatHistory.appendChild(message);
-  if (sender === 'ai') highlightCode(message);
-  chatHistory.scrollTop = chatHistory.scrollHeight;
-  if (save) saveHistory();
-  refreshIcons();
-  return message;
-}
-
-// ============================================================
-//   ОТПРАВКА ВОПРОСА
-// ============================================================
 async function askAI() {
-  const t = translations[currentUILang];
-  const question = askInput.value.trim();
-  if (!question && !selectedImageBase64) return;
-  if (question && question.length > 2000) {
-    addMessage(t.longMsg, 'ai');
+  const question = el.askInput.value.trim();
+  if (!question && !state.selectedImage) return;
+  if (question.length > MAX_QUESTION_LENGTH) {
+    addMessage(t('longMsg'), 'ai');
     return;
   }
 
-  if (selectedImageBase64 && !question) addMessage('📷 Посмотри фото и скажи, какое благословение нужно произнести', 'user');
-  else if (selectedImageBase64 && question) addMessage(question + ' (с фото)', 'user');
-  else addMessage(question, 'user');
-  askInput.value = '';
+  // Сообщение пользователя в ленте
+  const image = state.selectedImage;
+  const userText = image
+    ? (question ? question + t('withPhoto') : t('photoQuestion'))
+    : question;
+  addMessage(userText, 'user');
+  el.askInput.value = '';
 
-  const thinking = addMessage(t.thinking, 'ai', false);
+  // Индикатор «Думаю...» (не сохраняется в историю)
+  const thinking = addMessage(t('thinking'), 'ai', false);
   thinking.classList.add('thinking');
-  askBtn.disabled = true;
+  el.askBtn.disabled = true;
 
   const context = getContext();
-  const notesPrompt = getNotesPrompt();
-  const basePrompt = currentCharacter ? currentCharacter.prompt : 'Ты — дружелюбный помощник SaSholom AI. Отвечай кратко, с юмором.';
-  const systemPrompt = [basePrompt, notesPrompt].filter(Boolean).join(' ');
 
   try {
-    const res = await fetch('/api/ask-deepseek', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        question: question || undefined,
-        history: context,
-        systemPrompt,
-        provider: currentProvider,
-        image: selectedImageBase64 || undefined
-      })
+    const data = await askServer({
+      // Если отправлено только фото — задаём нейтральный вопрос
+      // на языке пользователя
+      question: question || (image ? t('photoQuestion') : undefined),
+      history: context,
+      systemPrompt: buildSystemPrompt(),
+      provider: state.provider,
+      image: image || undefined,
     });
 
-    const data = await res.json();
     thinking.remove();
     resetImageState();
 
-    const answer = data.answer || data.error || '🤷 Извини, что-то пошло не так. Попробуй ещё раз.';
+    const answer = data.answer || data.error || t('serverError');
     const aiMsg = addMessage('', 'ai', false);
     const bubble = aiMsg.querySelector('.bubble');
-    bubble.innerHTML = ''; bubble.textContent = '';
 
-    typewriterEffect(bubble, answer, 30, () => {
+    // Печатаем ответ по словам, затем заменяем на полноценный markdown
+    typewriterEffect(bubble, answer, () => {
       bubble.innerHTML = renderMarkdown(answer);
       bubble.setAttribute('data-raw', answer);
-      highlightCode(aiMsg);
-      context.push({ role: 'user', content: question || '📷 Фото' });
+      saveHistory();
+      refreshIcons();
+
+      context.push({ role: 'user', content: question || t('photoQuestion') });
       context.push({ role: 'assistant', content: answer });
       saveContext(context);
-      saveHistory();
-      queryCount++;
-      localStorage.setItem(QUERY_COUNT_KEY, queryCount);
-      if (counterSpan) counterSpan.textContent = `Запросов: ${queryCount}`;
+
+      state.queryCount++;
+      saveQueryCount(state.queryCount);
+      updateCounter();
     });
-  } catch (err) {
+  } catch {
     thinking.remove();
     resetImageState();
-    addMessage(t.serverError, 'ai');
+    addMessage(t('serverError'), 'ai');
   } finally {
-    askBtn.disabled = false;
+    el.askBtn.disabled = false;
     refreshIcons();
   }
 }
 
-// ============================================================
-//   ОЧИСТКА ЧАТА
-// ============================================================
-function clearChat() {
-  const t = translations[currentUILang];
-  if (!confirm(t.clearConfirm)) return;
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(CONTEXT_KEY);
-  chatHistory.innerHTML = '';
-  addMessage(t.welcome, 'ai');
+// Системный промпт: персонаж + заметки о пользователе + язык ответа.
+function buildSystemPrompt() {
+  const base = state.character
+    ? state.character.prompt
+    : 'Ты — дружелюбный помощник SaSholom AI. Отвечай кратко, с юмором.';
+  const notes = getNotes();
+  const notesPart = (notes.name || notes.prefs)
+    ? `[Информация о пользователе] Имя: ${notes.name || 'неизвестно'}. Предпочтения: ${notes.prefs || 'нет'}.`
+    : '';
+  return [base, notesPart, t('replyLangHint')].filter(Boolean).join(' ');
 }
 
 // ============================================================
-//   ТЕМА
+//   ПЕРСОНАЖИ: СЕЛЕКТЫ КАТЕГОРИИ И ПЕРСОНАЖА
 // ============================================================
+
+function populateCategories() {
+  const current = el.categorySelect.value;
+  el.categorySelect.innerHTML = '';
+  el.categorySelect.append(new Option(t('allCategories'), ''));
+  categories.forEach((cat) => el.categorySelect.append(new Option(categoryName(cat), cat)));
+  el.categorySelect.value = current || '';
+}
+
+function populateCharacters() {
+  const category = el.categorySelect.value;
+  const currentName = state.character?.name || '';
+  el.characterSelect.innerHTML = '';
+  el.characterSelect.append(new Option(t('choosePersona'), ''));
+
+  const list = category ? characters.filter((c) => c.category === category) : characters;
+  list.forEach((c) => {
+    const opt = new Option(c.name, c.name);
+    opt.title = c.description; // описание — во всплывающей подсказке
+    el.characterSelect.append(opt);
+  });
+  el.characterSelect.disabled = false;
+
+  // Сохраняем выбор, если персонаж есть в отфильтрованном списке
+  el.characterSelect.value = list.some((c) => c.name === currentName) ? currentName : '';
+}
+
+function selectCharacter(name) {
+  state.character = findCharacter(name);
+  el.defaultCharBtn.classList.toggle('active', !state.character);
+  saveSetting('character', name || 'default');
+}
+
+// ============================================================
+//   ТЕМА И ЯЗЫК
+// ============================================================
+
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('sasholom_theme', theme);
-  if (themeToggle) themeToggle.textContent = theme === 'light' ? '☀️' : '🌓';
+  saveSetting('theme', theme);
+  el.themeToggle.textContent = theme === 'light' ? '☀️' : '🌓';
 }
+
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
   setTheme(current === 'dark' ? 'light' : 'dark');
 }
 
-// ============================================================
-//   ГОЛОСОВОЙ ВВОД
-// ============================================================
-const voiceLangs = [
-  { code: 'ru-RU', label: '🇷🇺 RU' },
-  { code: 'en-US', label: '🇺🇸 EN' },
-  { code: 'he-IL', label: '🇮🇱 HE' }
-];
-let currentVoiceLang = 0;
-
-function updateLangButton() {
-  if (langBtn) langBtn.textContent = voiceLangs[currentVoiceLang].label;
-}
-function switchLanguage() {
-  currentVoiceLang = (currentVoiceLang + 1) % voiceLangs.length;
-  updateLangButton();
-  if (isListening) { stopListening(); startListening(); }
-}
-
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  recognition.onresult = (event) => {
-    askInput.value = event.results[0][0].transcript;
-    stopListening();
-    askAI();
-  };
-  recognition.onerror = () => {
-    stopListening();
-    addMessage(translations[currentUILang].voiceError, 'ai');
-  };
-  recognition.onend = stopListening;
-}
-
-function startListening() {
-  if (!recognition) {
-    addMessage(translations[currentUILang].voiceUnsupported, 'ai');
-    return;
-  }
-  recognition.lang = voiceLangs[currentVoiceLang].code;
-  recognition.start();
-  isListening = true;
-  voiceBtn.classList.add('listening');
-  voiceBtn.innerHTML = '<i data-lucide="mic-off"></i>';
+// Смена языка: статичные тексты + динамические списки и счётчик.
+function setLanguage(lang) {
+  applyLanguage(lang);
+  populateCategories();
+  populateCharacters();
+  updateCounter();
   refreshIcons();
 }
-function stopListening() {
-  isListening = false;
-  voiceBtn.classList.remove('listening');
-  voiceBtn.innerHTML = '<i data-lucide="mic"></i>';
-  if (recognition) recognition.stop();
-  refreshIcons();
+
+function updateCounter() {
+  el.counterSpan.textContent = `${t('counterLabel')}: ${state.queryCount}`;
+}
+
+// ============================================================
+//   ОЧИСТКА ЧАТА И ЗАМЕТКИ
+// ============================================================
+
+function clearChat() {
+  if (!confirm(t('clearConfirm'))) return;
+  clearHistoryData();
+  el.chatHistory.innerHTML = '';
+  addMessage(t('welcome'), 'ai', false);
+}
+
+function toggleNotesPanel() {
+  const isHidden = el.notesPanel.style.display === 'none';
+  el.notesPanel.style.display = isHidden ? 'block' : 'none';
+}
+
+function handleSaveNotes() {
+  saveNotes({ name: el.noteName.value, prefs: el.notePrefs.value });
+  el.notesPanel.style.display = 'none';
+  addMessage(t('notesSaved'), 'ai');
 }
 
 // ============================================================
 //   ПОДПИСКА НА СОБЫТИЯ
 // ============================================================
-askBtn.addEventListener('click', askAI);
-clearBtn.addEventListener('click', clearChat);
-themeToggle.addEventListener('click', toggleTheme);
-langToggle.addEventListener('click', () => {
-  const langs = ['ru', 'en', 'he'];
-  const idx = langs.indexOf(currentUILang);
-  applyLanguage(langs[(idx + 1) % langs.length]);
+
+el.askBtn.addEventListener('click', askAI);
+el.askInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    askAI();
+  }
 });
-voiceBtn.addEventListener('click', () => isListening ? stopListening() : startListening());
-langBtn.addEventListener('click', switchLanguage);
-askInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askAI(); }
+el.clearBtn.addEventListener('click', clearChat);
+
+el.themeToggle.addEventListener('click', toggleTheme);
+el.langToggle.addEventListener('click', () => {
+  const next = LANGS[(LANGS.indexOf(state.uiLang) + 1) % LANGS.length];
+  setLanguage(next);
 });
-document.querySelectorAll('.provider-btn').forEach(btn => {
+
+el.voiceBtn.addEventListener('click', toggleListening);
+el.voiceLangBtn.addEventListener('click', switchVoiceLang);
+
+document.querySelectorAll('.provider-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
-    currentProvider = btn.dataset.provider;
-    document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('active'));
+    state.provider = btn.dataset.provider;
+    document.querySelectorAll('.provider-btn').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
-    localStorage.setItem('sasholom_provider', currentProvider);
+    saveSetting('provider', state.provider);
   });
 });
-categorySelect.addEventListener('change', updateCharacterList);
-characterSelect.addEventListener('change', (e) => selectCharacter(e.target.value));
+
+el.categorySelect.addEventListener('change', populateCharacters);
+el.characterSelect.addEventListener('change', (e) => selectCharacter(e.target.value));
+el.defaultCharBtn.addEventListener('click', () => {
+  selectCharacter('');
+  el.characterSelect.value = '';
+});
+
+el.exportBtn.addEventListener('click', exportHistory);
+el.searchInput.addEventListener('input', (e) => filterMessages(e.target.value));
+el.notesBtn.addEventListener('click', toggleNotesPanel);
+el.saveNotesBtn.addEventListener('click', handleSaveNotes);
 
 // ============================================================
 //   ИНИЦИАЛИЗАЦИЯ
 // ============================================================
-setTheme(localStorage.getItem('sasholom_theme') || 'dark');
-currentProvider = localStorage.getItem('sasholom_provider') || 'chadgpt';
-document.querySelectorAll('.provider-btn').forEach(b => {
-  b.classList.toggle('active', b.dataset.provider === currentProvider);
-});
-const savedLang = localStorage.getItem(UI_LANG_KEY) || 'ru';
-applyLanguage(savedLang);
-const savedChar = localStorage.getItem(CHARACTER_KEY);
-if (savedChar && savedChar !== 'default') {
-  selectCharacter(savedChar);
-  characterSelect.value = savedChar;
+
+function init() {
+  // Тема и провайдер
+  setTheme(getSetting('theme', 'dark'));
+  state.provider = getSetting('provider', 'chadgpt');
+  document.querySelectorAll('.provider-btn').forEach((b) => {
+    b.classList.toggle('active', b.dataset.provider === state.provider);
+  });
+
+  // Голос, медиа, заметки
+  initVoice({
+    onTranscript: (text) => {
+      el.askInput.value = text;
+      askAI();
+    },
+    onError: () => addMessage(t('voiceError'), 'ai'),
+    onUnsupported: () => addMessage(t('voiceUnsupported'), 'ai'),
+  });
+  initMedia();
+  const notes = getNotes();
+  el.noteName.value = notes.name || '';
+  el.notePrefs.value = notes.prefs || '';
+
+  // Счётчик запросов
+  state.queryCount = getQueryCount();
+
+  // Сохранённый персонаж (до setLanguage, чтобы селекты его подхватили)
+  const savedChar = getSetting('character', 'default');
+  if (savedChar && savedChar !== 'default') selectCharacter(savedChar);
+
+  // Язык: применяет переводы и наполняет селекты
+  setLanguage(getSetting('uiLang', 'ru'));
+
+  // История чата; если её нет — приветствие
+  if (!loadHistory()) addMessage(t('welcome'), 'ai', false);
+
+  refreshIcons();
 }
-updateLangButton();
-counterSpan.textContent = `Запросов: ${queryCount}`;
-loadHistory();
-refreshIcons();
+
+init();
+
+})();
