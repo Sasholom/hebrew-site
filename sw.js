@@ -9,13 +9,15 @@
 //   чтобы у пользователей обновился кэш.
 // ============================================================
 
-const CACHE_NAME = 'sasholom-v5';
+const CACHE_NAME = 'sasholom-v6';
 
 const PRECACHE = [
   '/',
   '/index.html',
-  '/style.css?v=2',
-  '/script.js?v=2',
+  '/rebbe.html',
+  '/style.css?v=3',
+  '/script.js?v=3',
+  '/rebbe.js?v=1',
   '/manifest.json',
   '/favicon.ico',
   '/icon-192.png',
@@ -54,10 +56,13 @@ self.addEventListener('fetch', (event) => {
   // Кэшируем только GET; запросы к AI всегда идут в сеть
   if (request.method !== 'GET' || url.pathname.startsWith('/api/')) return;
 
-  // Навигация: сначала сеть (свежий HTML), офлайн — из кэша
+  // Навигация: сначала сеть (свежий HTML), офлайн — запрошенная страница
+  // из кэша, а если её там нет — главная как запасной вариант
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('/index.html'))
+      fetch(request).catch(() =>
+        caches.match(request).then((cached) => cached || caches.match('/index.html'))
+      )
     );
     return;
   }

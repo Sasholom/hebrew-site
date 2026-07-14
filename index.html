@@ -44,7 +44,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
   <!-- ?v=N — при изменении файла увеличь версию, чтобы сбросить кэш браузеров -->
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -55,6 +55,9 @@
     <h1 class="brand" data-i18n="title">🚀 SaSholom</h1>
 
     <div class="topbar-right">
+      <!-- Отдельный режим: ответ по библиотеке писем Ребе и статей chabad.org -->
+      <a href="rebbe.html" class="rebbe-link" data-i18n-title="rebbeTitle">📜 <span data-i18n="rebbeBtn">Ответ Ребе</span></a>
+
       <!-- Выбор персонажа (опции наполняет script.js) -->
       <select id="character-select" class="select"></select>
 
@@ -154,7 +157,7 @@
   <!-- ===== ОСНОВНОЙ СКРИПТ ===== -->
   <!-- Обычный скрипт (не module): работает и при открытии файла
        двойным кликом (file://), и на сервере/Vercel. -->
-  <script src="script.js?v=2"></script>
+  <script src="script.js?v=3"></script>
 
   <!-- ===== SERVICE WORKER (PWA) ===== -->
   <script>

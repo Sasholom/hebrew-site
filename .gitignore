@@ -1,0 +1,12 @@
+# Зависимости
+node_modules/
+
+# Служебные файлы macOS
+.DS_Store
+**/.DS_Store
+
+# Логи и локальные окружения
+*.log
+.env
+.env*.local
+.vercel

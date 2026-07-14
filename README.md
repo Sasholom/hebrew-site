@@ -4,6 +4,11 @@ AI-портал со **100 экспертными персонажами**: ча
 голосовой ввод и озвучка, загрузка PDF/TXT, три языка интерфейса (русский, English, עברית с RTL),
 PWA с офлайн-режимом.
 
+Отдельный режим **«📜 Ответ Ребе»** (кнопка в шапке → страница `rebbe.html`) —
+семантический поиск по библиотеке писем Любавичского Ребе (Игрот Кодеш) и
+статей chabad.org: ответ строится на найденном тексте с указанием источника
+(том/страница письма или ссылка на статью), а не «из головы».
+
 **Продакшен:** https://sasholomsite.vercel.app
 
 ---
@@ -34,7 +39,16 @@ npm run dev                   # vercel dev — статика + serverless-фу�
 ### Деплой
 
 Пуш в подключённый к Vercel репозиторий — деплой автоматический.
-Единственная переменная окружения: `CHAD_API_KEY` (Vercel → Project → Settings → Environment Variables).
+Переменные окружения (Vercel → Project → Settings → Environment Variables):
+
+| Переменная | Для чего | Нужна для |
+|---|---|---|
+| `CHAD_API_KEY` | доступ к модели (GPT/Gemini/Claude) | чат + «Ответ Ребе» |
+| `SUPABASE_URL` | адрес базы с проиндексированной библиотекой | «Ответ Ребе» |
+| `SUPABASE_SERVICE_ROLE_KEY` | доступ к базе из серверной функции | «Ответ Ребе» |
+| `HF_API_TOKEN` | эмбеддинг вопроса на лету (Hugging Face) | «Ответ Ребе» |
+
+Обычный чат работает с одним `CHAD_API_KEY`; режим «Ответ Ребе» требует все четыре.
 
 ---
 
@@ -43,10 +57,17 @@ npm run dev                   # vercel dev — статика + serverless-фу�
 ```
 /
 ├── index.html          # Разметка. Статичные тексты помечены data-i18n
+├── rebbe.html          # Режим «Ответ Ребе» — отдельная страница-чат
 ├── style.css           # Стили (glassmorphism, тёмная/светлая тема, RTL)
-├── script.js           # Весь клиент в одном обычном скрипте (работает по file://)
+├── script.js           # Клиент главного чата (один обычный скрипт, работает по file://)
+├── rebbe.js            # Клиент режима «Ответ Ребе»
 ├── api/
-│   └── chat.js         # Vercel Serverless: прокси к Chad API + rate limiting
+│   ├── chat.js             # Vercel Serverless: прокси к Chad API + rate limiting
+│   ├── ask-rebbe.js        # «Ответ Ребе»: поиск по библиотеке → grounded-ответ с источниками
+│   ├── search-library.js   # Голый семантический поиск (JSON), без модели
+│   └── _lib/
+│       └── library-search.js  # Общая логика: эмбеддинг (HF) + поиск в Supabase
+│                              # (папка с "_" не становится HTTP-эндпоинтом на Vercel)
 ├── sw.js               # Service worker: офлайн-кэш (обнови CACHE_NAME при изменении статики!)
 ├── manifest.json       # PWA-манифест
 ├── favicon.ico, icon-192.png, icon-512.png
@@ -73,6 +94,26 @@ npm run dev                   # vercel dev — статика + serverless-фу�
 4. Ответ «печатается» по словам, затем рендерится как Markdown с подсветкой кода.
 5. История и настройки хранятся в localStorage.
 
+### Режим «Ответ Ребе» (RAG)
+
+Chad API не поддерживает нативный function calling, поэтому «поиск в библиотеке»
+оркеструется на сервере, а не самой моделью:
+
+1. `rebbe.js → ask()` шлёт вопрос + последние реплики в `/api/ask-rebbe`.
+2. `api/ask-rebbe.js` считает эмбеддинг вопроса (Hugging Face, модель
+   `multilingual-e5-base` — та же, что при локальной индексации) и ищет
+   ближайшие куски в Supabase (`match_library_chunks`).
+3. Куски с похожестью выше порога (`SIMILARITY_THRESHOLD`) кладутся в системный
+   промпт; модель отвечает, **опираясь на них**, и указывает источник.
+   Если релевантного нет — честно сообщает об этом и отвечает общо, не выдумывая
+   источников.
+4. Ответ приходит как `{ answer, grounded, sources[] }`; клиент рендерит ответ
+   и кликабельные карточки-источники.
+
+> Порог `SIMILARITY_THRESHOLD` и модель `REBBE_MODEL` — константы в начале
+> `api/ask-rebbe.js`. Реальные значения similarity видны в логах Vercel
+> (строка `[ask-rebbe] …`) — по ним удобно подстроить порог.
+
 ## Частые задачи
 
 | Задача | Где |
@@ -80,6 +121,8 @@ npm run dev                   # vercel dev — статика + serverless-фу�
 | Добавить персонажа | [script.js](script.js), секция «БИБЛИОТЕКА ПЕРСОНАЖЕЙ» — добавь объект в массив `characters`; категория и селекты обновятся сами |
 | Добавить перевод / язык | [script.js](script.js), секция «ЛОКАЛИЗАЦИЯ» — `translations` и `categoryNames`; в HTML тексты помечаются `data-i18n` |
 | Поменять модели AI | [api/chat.js](api/chat.js) — `MODEL_ENDPOINTS` |
+| Настроить «Ответ Ребе» (модель, порог похожести, число кусков) | [api/ask-rebbe.js](api/ask-rebbe.js) — константы `REBBE_MODEL`, `SIMILARITY_THRESHOLD`, `SEARCH_LIMIT` |
+| Поправить системный промпт «Ответа Ребе» | [api/ask-rebbe.js](api/ask-rebbe.js) — `GROUNDED_RULES` / `UNGROUNDED_PROMPT` |
 | Поменять лимиты (длина вопроса, контекст, размер фото) | [script.js](script.js), секция «КОНСТАНТЫ» и `MAX_QUESTION_LENGTH` в [api/chat.js](api/chat.js) |
 | Изменить статику | Не забудь поднять версию `CACHE_NAME` в [sw.js](sw.js), иначе у пользователей останется старый кэш |
 

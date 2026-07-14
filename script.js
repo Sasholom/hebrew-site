@@ -447,6 +447,8 @@ const translations = {
     langTitle: 'Сменить язык',
     // Инструкция модели: на каком языке отвечать
     replyLangHint: 'Отвечай на том языке, на котором пишет пользователь.',
+    rebbeBtn: 'Ответ Ребе',
+    rebbeTitle: 'Найти ответ в письмах Ребе и статьях chabad.org',
   },
 
   en: {
@@ -500,6 +502,8 @@ const translations = {
     themeTitle: 'Switch theme',
     langTitle: 'Switch language',
     replyLangHint: 'Reply in the language the user writes in.',
+    rebbeBtn: "The Rebbe's Answer",
+    rebbeTitle: "Find an answer in the Rebbe's letters and chabad.org articles",
   },
 
   he: {
@@ -553,6 +557,8 @@ const translations = {
     themeTitle: 'החלף ערכת נושא',
     langTitle: 'החלף שפה',
     replyLangHint: 'ענה בשפה שבה כותב המשתמש.',
+    rebbeBtn: 'תשובת הרבי',
+    rebbeTitle: 'מצא תשובה במכתבי הרבי ובמאמרי chabad.org',
   },
 };
 
