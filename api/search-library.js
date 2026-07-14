@@ -17,7 +17,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const HF_MODEL = 'intfloat/multilingual-e5-base';
-const HF_API_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
+const HF_API_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}/pipeline/feature-extraction`;
 
 async function embedQuery(text) {
   if (!process.env.HF_API_TOKEN) {
