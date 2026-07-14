@@ -10,16 +10,21 @@
 //     3) если релевантного нет — честно говорим об этом и отвечаем общо,
 //        НЕ выдумывая источников
 //
-//   Chad API (ask.chadgpt.ru) не поддерживает нативный function calling, поэтому
-//   «поиск в библиотеке» оркеструется здесь, на сервере, а не самой моделью.
+//   Поиск по библиотеке оркеструется здесь, на сервере (retrieve → кладём
+//   найденное в системный промпт → один вызов модели). Отвечает модель через
+//   новый OpenAI-совместимый API Chad v2 (api/_lib/chad.js) — там доступны
+//   сильные модели (по умолчанию claude-5-sonnet).
 //
 //   Переменные окружения (уже настроены в Vercel):
 //     SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — доступ к базе
 //     HF_API_TOKEN                            — эмбеддинг вопроса
-//     CHAD_API_KEY                            — доступ к модели (GPT/Gemini/Claude)
+//     CHAD_API_KEY                            — доступ к модели (v2, заголовок Bearer)
+//                                               ⚠️ для v2 нужен пополненный рублями
+//                                               API-баланс в личном кабинете Chad
 // ============================================================
 
 import { embedAndSearch } from './_lib/library-search.js';
+import { chatCompletion } from './_lib/chad.js';
 
 // --- Rate limiting (in-memory, как в chat.js: сбрасывается на холодном старте,
 //     между инстансами не делится — для строгого лимита нужен внешний стор) ---
@@ -30,10 +35,11 @@ const MAX_REQUESTS = 15;
 const MAX_QUESTION_LENGTH = 2000;
 const CONTEXT_MESSAGES = 6; // сколько последних реплик отдаём модели для контекста
 
-// Модель для ответа. gemini-3-flash — баланс качества/скорости/цены и хорошо
-// держит русский. Можно поднять до 'claude-3.7-sonnet' для лучшего следования
-// инструкции «не выдумывай источник», либо снизить до 'gpt-5-nano' ради цены.
-const REBBE_MODEL = 'gemini-3-flash';
+// Модель для ответа (ID из Chad v2, GET /api/v1/models). claude-5-sonnet —
+// сильная модель, аккуратно следует инструкции «не выдумывай источник», тёплый
+// тон, отличный русский. Альтернативы: 'claude-4.8-opus' (дороже/глубже),
+// 'gemini-3.5-flash' (дешевле), 'gpt-5.5'.
+const REBBE_MODEL = 'claude-5-sonnet';
 
 // Сколько кусков тянем из базы и порог косинусной похожести, ниже которого
 // считаем, что относящегося к вопросу материала не нашлось. Порог подобран
@@ -108,37 +114,20 @@ function buildGroundedPrompt(rows) {
   return `${GROUNDED_RULES}\n\n[Найденные фрагменты]\n${blocks.join('\n\n')}`;
 }
 
-// Прокси-запрос к Chad API (тот же интерфейс, что в chat.js).
+// Собирает messages в OpenAI-формате (system + история + текущий вопрос)
+// и зовёт Chad v2. В v2 сам вопрос — это последнее user-сообщение в messages,
+// отдельного поля message (как в старом API) нет.
 async function callChad({ systemPrompt, question, history }) {
-  const apiKey = process.env.CHAD_API_KEY;
-  if (!apiKey) throw new Error('CHAD_API_KEY не настроен на сервере');
-
-  const chatHistory = [{ role: 'system', content: systemPrompt }];
+  const messages = [{ role: 'system', content: systemPrompt }];
   if (Array.isArray(history)) {
     history
       .slice(-CONTEXT_MESSAGES)
       .filter((m) => ['user', 'assistant'].includes(m?.role) && typeof m?.content === 'string')
-      .forEach((m) => chatHistory.push({ role: m.role, content: m.content }));
+      .forEach((m) => messages.push({ role: m.role, content: m.content }));
   }
+  messages.push({ role: 'user', content: question });
 
-  const response = await fetch(`https://ask.chadgpt.ru/api/public/${REBBE_MODEL}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: question, api_key: apiKey, history: chatHistory }),
-  });
-
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) {
-    const text = await response.text();
-    console.error('❌ Ответ Chad API не JSON:', text.slice(0, 300));
-    throw new Error('Chad API вернул некорректный ответ');
-  }
-
-  const data = await response.json();
-  if (!data.is_success) {
-    throw new Error(data.error_message || 'Ошибка Chad API');
-  }
-  return data.response;
+  return chatCompletion({ model: REBBE_MODEL, messages, temperature: 0.4 });
 }
 
 export default async function handler(req, res) {
